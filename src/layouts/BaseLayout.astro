@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Solar Blessing — Holistic Health, Naturally Crafted',
+  description = 'Handcrafted Kombucha, Sobolo, and healing Hand Salve-ation. Nourish your body with the power of nature.',
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title}</title>
+
+  <!-- Security meta tags -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+  <!-- Favicon placeholder -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body class="min-h-screen flex flex-col">
+  <Nav />
+  <main class="flex-1">
+    <slot />
+  </main>
+  <footer class="bg-forest text-white py-10 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <span class="font-display text-xl text-sun tracking-wide">Solar Blessing</span>
+      <p class="text-white/60 text-sm font-body">
+        © {new Date().getFullYear()} Solar Blessing. All rights reserved.
+      </p>
+      <div class="flex gap-6 text-sm text-white/60">
+        <a href="/updates" class="hover:text-sun transition-colors">Updates</a>
+        <a href="/about" class="hover:text-sun transition-colors">About</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

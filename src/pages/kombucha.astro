@@ -1,0 +1,36 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+---
+<ProductLayout
+  product="kombucha"
+  title="Kombucha"
+  tagline="Living Probiotic Elixir"
+  icon="🍵"
+  accentClass="bg-sun/15"
+  intro="Our handcrafted kombucha is a naturally fermented tea rich in probiotics and beneficial enzymes. Each batch is carefully brewed using organic tea and our special SCOBY culture, resulting in a refreshing, tangy beverage that supports gut health and overall wellness."
+  whatIsIt="Kombucha is an ancient fermented beverage made from sweetened tea and a symbiotic culture of bacteria and yeast (SCOBY). Through fermentation, beneficial probiotics, organic acids, and enzymes are created — making it a powerful drink for digestive health and immunity."
+  benefits={[
+    'Improved gut health & digestion',
+    'Increased energy & mental clarity',
+    'Detoxification support',
+    'Immune system boost',
+    'Rich in B vitamins & antioxidants',
+  ]}
+  steps={[
+    {
+      number: '01',
+      title: 'Brew Sweet Tea',
+      body: 'We start with premium organic tea (black or green) and pure cane sugar, brewing a strong, sweet tea base that will fuel the fermentation process.',
+    },
+    {
+      number: '02',
+      title: 'Add SCOBY',
+      body: 'Once cooled, we introduce our carefully maintained SCOBY along with starter liquid from a previous batch, kickstarting the fermentation.',
+    },
+    {
+      number: '03',
+      title: 'Ferment & Bottle',
+      body: 'The mixture ferments for 7–14 days, then we bottle and optionally add natural flavours for a second fermentation, creating natural carbonation.',
+    },
+  ]}
+/>

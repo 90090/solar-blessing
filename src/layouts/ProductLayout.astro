@@ -1,0 +1,134 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import ReviewForm from '../components/ReviewForm';
+import StarRating from '../components/StarRating';
+
+interface Step { number: string; title: string; body: string; }
+interface Review { id: string; name: string; rating: number; body: string; createdAt: string; }
+
+interface Props {
+  product:    'kombucha' | 'sobolo' | 'salve';
+  title:      string;
+  tagline:    string;
+  intro:      string;
+  whatIsIt:   string;
+  benefits:   string[];
+  steps:      Step[];
+  accentClass: string;
+  icon:       string;
+}
+
+const {
+  product, title, tagline, intro, whatIsIt, benefits,
+  steps, accentClass, icon,
+} = Astro.props;
+
+// ── Read CSRF token set by middleware (never set cookies here) ────────────────
+// Middleware already called context.cookies.set() before headers were flushed.
+// We just read it back to pass into the React form as a prop.
+const csrfToken = Astro.cookies.get('csrf_token')?.value ?? '';
+
+// ── Fetch approved reviews at SSR time ────────────────────────────────────────
+let reviews: Review[] = [];
+try {
+  const origin = Astro.url.origin;
+  const res = await fetch(`${origin}/api/reviews?product=${product}`);
+  if (res.ok) reviews = await res.json() as Review[];
+} catch (err) {
+  console.error('Could not pre-load reviews:', err);
+}
+---
+
+<BaseLayout title={`${title} — Solar Blessing`}>
+
+  <!-- Hero -->
+  <section class:list={['grain-overlay py-24 px-6', accentClass]}>
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <div class="text-8xl flex items-center justify-center h-64 bg-white/20 backdrop-blur rounded-3xl text-center">
+        {icon}
+      </div>
+      <div class="space-y-5 animate-fade-up">
+        <h1 class="font-display text-6xl text-forest">{title}</h1>
+        <p class="font-display text-xl text-sun italic">{tagline}</p>
+        <p class="font-body text-bark leading-relaxed text-lg">{intro}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- What is it -->
+  <section class="section-pad bg-white">
+    <div class="container-xl grid lg:grid-cols-2 gap-16 items-start">
+      <div class="space-y-4">
+        <h2 class="font-display text-4xl text-forest">What is {title}?</h2>
+        <p class="font-body text-bark/70 leading-relaxed">{whatIsIt}</p>
+        <div class="pt-2">
+          <h3 class="font-semibold text-forest mb-3">Benefits include:</h3>
+          <ul class="space-y-2">
+            {benefits.map(b => (
+              <li class="flex items-center gap-3 text-bark/70">
+                <span class="w-5 h-5 rounded-full bg-sun/30 flex items-center justify-center flex-shrink-0 text-xs">✓</span>
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div class="h-72 rounded-2xl bg-cream flex items-center justify-center text-6xl">
+        {icon}
+      </div>
+    </div>
+  </section>
+
+  <!-- How we make it -->
+  <section class="section-pad bg-cream">
+    <div class="container-xl">
+      <h2 class="font-display text-4xl text-forest mb-12">How We Make Our {title}</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {steps.map((step, i) => (
+          <div class="card p-7 space-y-3">
+            <div class="text-sun font-body font-bold text-sm tracking-widest uppercase">Step {i + 1}</div>
+            <h3 class="font-display text-xl text-forest">{step.title}</h3>
+            <p class="font-body text-bark/60 text-sm leading-relaxed">{step.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  <section class="section-pad bg-white" id="reviews">
+    <div class="container-xl max-w-4xl">
+      <h2 class="font-display text-4xl text-forest mb-2">What People Are Saying</h2>
+      <p class="text-bark/50 mb-10">Reviews are moderated before publishing.</p>
+
+      <!-- Approved reviews (SSR-fetched) -->
+      {reviews.length > 0 ? (
+        <div class="space-y-5 mb-14">
+          {reviews.map(r => (
+            <div class="bg-cream rounded-2xl p-6 space-y-2">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="font-semibold text-forest">{r.name}</span>
+                <StarRating client:load value={r.rating} readonly size="sm" />
+              </div>
+              <p class="text-bark/70 font-body text-sm leading-relaxed">{r.body}</p>
+              <p class="text-bark/30 text-xs">
+                {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="bg-cream rounded-2xl p-8 text-center text-bark/40 mb-14 italic">
+          No reviews yet — be the first!
+        </div>
+      )}
+
+      <!-- Submit form -->
+      <div class="bg-cream rounded-3xl p-8 md:p-10">
+        <h3 class="font-display text-2xl text-forest mb-6">Leave a Review</h3>
+        <ReviewForm client:load product={product} csrfToken={csrfToken} />
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

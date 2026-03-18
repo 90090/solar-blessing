@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+Allow: /
+Allow: /about
+Allow: /kombucha
+Allow: /sobolo
+Allow: /salve
+Allow: /updates
+
+Sitemap: https://solarblessing.com/sitemap.xml

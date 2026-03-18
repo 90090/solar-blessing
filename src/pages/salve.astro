@@ -1,0 +1,36 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+---
+<ProductLayout
+  product="salve"
+  title="Hand Salve-ation"
+  tagline="Natural Healing Hand Balm"
+  icon="✋"
+  accentClass="bg-earth/10"
+  intro="Our Hand Salve-ation is a deeply nourishing balm crafted with organic beeswax, healing herbs, and essential oils. Perfect for dry, cracked, or hardworking hands — this salve provides intense moisture and protection while promoting skin repair and regeneration."
+  whatIsIt="Unlike conventional lotions that evaporate quickly, our salve creates a protective barrier that locks in moisture while allowing skin to breathe. Infused with calendula, comfrey, and lavender, it soothes irritation and accelerates healing naturally."
+  benefits={[
+    'Deep moisturisation & hydration',
+    'Heals cracked and damaged skin',
+    'Anti-inflammatory properties',
+    'Protects against environmental damage',
+    '100% natural, no synthetic chemicals',
+  ]}
+  steps={[
+    {
+      number: '01',
+      title: 'Infuse Healing Oils',
+      body: 'We slowly infuse organic olive oil with dried calendula, comfrey, and plantain herbs over gentle heat for several hours, extracting their healing properties.',
+    },
+    {
+      number: '02',
+      title: 'Add Beeswax & Butters',
+      body: 'We blend in organic beeswax for protection and shea butter for deep nourishment, creating the perfect texture that melts into skin without greasiness.',
+    },
+    {
+      number: '03',
+      title: 'Essential Oils & Pour',
+      body: 'Just before pouring, we add therapeutic-grade lavender and tea tree essential oils for their antimicrobial and calming properties. Each tin is hand-poured with care.',
+    },
+  ]}
+/>

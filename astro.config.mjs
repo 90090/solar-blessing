@@ -1,5 +1,11 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import tailwind from '@astrojs/tailwind';
 
-// https://astro.build/config
-export default defineConfig({});
+export default defineConfig({
+  integrations: [react(), tailwind()],
+  output: 'server', // SSR required for protected admin routes + API endpoints
+  server: {
+    port: 4321,
+  },
+});

@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="About — Solar Blessing">
+
+  <!-- Hero -->
+  <section class="bg-forest grain-overlay py-28 px-6">
+    <div class="max-w-3xl mx-auto text-center space-y-6 animate-fade-up">
+      <h1 class="font-display text-5xl md:text-6xl text-white">
+        About <em class="text-sun not-italic">Solar Blessing</em>
+      </h1>
+      <p class="font-body text-white/70 text-xl leading-relaxed">
+        Born from a love of traditional remedies and natural living.
+      </p>
+    </div>
+  </section>
+
+  <!-- Mission -->
+  <section class="section-pad bg-cream">
+    <div class="container-xl">
+      <div class="max-w-4xl mx-auto bg-sun/10 rounded-3xl p-10 md:p-16 space-y-6">
+        <h2 class="font-display text-3xl text-sun">Our Mission</h2>
+        <p class="font-body text-bark text-lg leading-relaxed">
+          At Solar Blessing, we believe in the healing power of nature. Our handcrafted products
+          are made with intention, love, and the finest natural ingredients. We are committed to
+          promoting holistic health and wellness through traditional fermentation and natural
+          remedies that nourish both body and spirit.
+        </p>
+        <p class="font-body text-bark/70 leading-relaxed">
+          Every batch we brew, every tin we pour, is a reflection of that commitment — to you,
+          to the earth, and to the time-honored traditions that guide our craft.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="section-pad bg-white">
+    <div class="container-xl">
+      <h2 class="font-display text-4xl text-forest text-center mb-12">Our Values</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        {[
+          { icon: '🌿', color: 'bg-forest', title: '100% Natural',   body: 'No artificial colours, flavours, or preservatives — ever.' },
+          { icon: '🫙', color: 'bg-sun',    title: 'Handcrafted',     body: 'Small-batch production so every product gets proper care and attention.' },
+          { icon: '🌍', color: 'bg-earth',  title: 'Sustainable',     body: 'Earth-friendly packaging and sourcing practices woven into everything we do.' },
+        ].map(v => (
+          <div class="card p-8 space-y-4 text-center">
+            <div class:list={['w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto', v.color]}>
+              {v.icon}
+            </div>
+            <h3 class="font-display text-2xl text-forest">{v.title}</h3>
+            <p class="font-body text-bark/60 leading-relaxed">{v.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
