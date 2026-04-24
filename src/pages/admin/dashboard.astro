@@ -1,7 +1,6 @@
 ---
 import { verifyAdminToken, getTokenFromCookies, securityHeaders } from '../../lib/security';
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
 let adminId = '';
 try {
   const token = getTokenFromCookies(Astro.request.headers.get('cookie'));
@@ -22,18 +21,27 @@ Object.entries(securityHeaders()).forEach(([k, v]) => Astro.response.headers.set
   <title>Dashboard — Solar Blessing Admin</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" />
-  <style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" />
+  <style is:global>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --sun:    #f9af39;
-      --sun-d:  #e09520;
-      --forest: #2b4b21;
-      --earth:  #774d25;
-      --cream:  #faf6ed;
-      --bark:   #3d2b1a;
-      --white:  #ffffff;
-      --radius: 1rem;
+      --sun:     #f9af39;
+      --sun-d:   #e09520;
+      --sun-bg:  #fef7ea;
+      --forest:  #2b4b21;
+      --forest-l:#3a6430;
+      --earth:   #774d25;
+      --cream:   #faf6ed;
+      --bark:    #3d2b1a;
+      --white:   #ffffff;
+      --red:     #dc2626;
+      --red-bg:  #fef2f2;
+      --red-bdr: #fecaca;
+      --green-bg:#f0fdf4;
+      --green-bdr:#bbf7d0;
+      --radius:  0.875rem;
+      --shadow:  0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(43,75,33,0.06);
+      --shadow-md:0 4px 6px rgba(0,0,0,0.07), 0 8px 24px rgba(43,75,33,0.09);
     }
     body {
       font-family: 'DM Sans', sans-serif;
@@ -41,392 +49,690 @@ Object.entries(securityHeaders()).forEach(([k, v]) => Astro.response.headers.set
       color: var(--bark);
       min-height: 100vh;
       display: flex;
+      font-size: 15px;
     }
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 240px;
+      width: 220px;
       flex-shrink: 0;
       background: var(--forest);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 1.5rem 1rem;
+      padding: 1.25rem 0.875rem;
       position: sticky;
       top: 0;
+      height: 100vh;
     }
     .sidebar-logo {
       font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       color: var(--sun);
-      padding: 0.5rem 0.75rem 1.5rem;
-      letter-spacing: 0.02em;
+      padding: 0.5rem 0.625rem 1.25rem;
     }
-    .sidebar-logo span { display:block; font-size:0.7rem; color:rgba(255,255,255,0.4); font-family:'DM Sans',sans-serif; margin-top:2px; }
+    .sidebar-logo span {
+      display: block;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif;
+      margin-top: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .nav-section {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.25);
+      padding: 0 0.625rem;
+      margin: 0.75rem 0 0.375rem;
+    }
     .nav-item {
       display: flex;
       align-items: center;
       gap: 0.625rem;
-      padding: 0.625rem 0.75rem;
-      border-radius: 0.625rem;
-      color: rgba(255,255,255,0.65);
+      padding: 0.55rem 0.625rem;
+      border-radius: 0.5rem;
+      color: rgba(255,255,255,0.6);
       cursor: pointer;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 500;
       border: none;
       background: none;
       width: 100%;
       text-align: left;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      position: relative;
     }
-    .nav-item:hover  { background: rgba(255,255,255,0.1); color: white; }
-    .nav-item.active { background: var(--sun); color: white; }
-    .nav-item .badge {
+    .nav-item:hover  { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: var(--sun); color: white; font-weight: 600; }
+    .nav-badge {
       margin-left: auto;
-      background: rgba(255,255,255,0.25);
-      font-size: 0.7rem;
-      padding: 1px 7px;
+      background: rgba(0,0,0,0.2);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
       border-radius: 999px;
+      min-width: 20px;
+      text-align: center;
     }
-    .nav-item.active .badge { background: rgba(255,255,255,0.35); }
-    .sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .nav-item.active .nav-badge { background: rgba(0,0,0,0.25); }
+    .nav-badge.has-items { background: var(--red); color: white; }
+    .nav-item.active .nav-badge.has-items { background: rgba(0,0,0,0.3); }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 0.875rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.625rem;
+      margin-bottom: 0.375rem;
+    }
+    .admin-avatar {
+      width: 28px; height: 28px;
+      background: var(--sun);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .admin-name { font-size: 0.78rem; color: rgba(255,255,255,0.6); }
     .logout-btn {
       display: flex; align-items: center; gap: 0.5rem;
-      color: rgba(255,255,255,0.5); font-size: 0.8rem;
-      background: none; border: none; cursor: pointer; padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem; width: 100%; transition: all 0.2s;
+      color: rgba(255,255,255,0.4); font-size: 0.78rem;
+      background: none; border: none; cursor: pointer;
+      padding: 0.45rem 0.625rem;
+      border-radius: 0.5rem; width: 100%;
+      transition: all 0.15s;
     }
     .logout-btn:hover { color: white; background: rgba(255,255,255,0.08); }
 
-    /* ── Main ── */
-    .main { flex: 1; overflow: auto; }
+    /* ── Main layout ── */
+    .main { flex: 1; overflow: auto; display: flex; flex-direction: column; }
     .topbar {
       background: white;
       border-bottom: 1px solid rgba(43,75,33,0.08);
-      padding: 1rem 2rem;
+      padding: 0.875rem 1.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 10;
+      gap: 1rem;
     }
-    .topbar-title { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--forest); }
-    .topbar-user { font-size:0.8rem; color:rgba(61,43,26,0.5); }
+    .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--forest); }
+    .topbar-right { display: flex; align-items: center; gap: 0.75rem; }
 
-    .content { padding: 2rem; max-width: 1100px; }
+    .filter-select {
+      font-size: 0.78rem;
+      border: 1.5px solid rgba(43,75,33,0.15);
+      border-radius: 0.5rem;
+      padding: 0.35rem 0.625rem;
+      background: white;
+      color: var(--bark);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .filter-select:focus { border-color: var(--sun); }
+
+    .content { padding: 1.5rem 1.75rem; flex: 1; }
 
     /* ── Stat cards ── */
-    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
     .stat-card {
       background: white;
       border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 2px 12px rgba(43,75,33,0.07);
-    }
-    .stat-label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:rgba(61,43,26,0.45); margin-bottom:0.375rem; }
-    .stat-value { font-family:'Playfair Display',serif; font-size:2.25rem; color:var(--forest); line-height:1; }
-    .stat-sub   { font-size:0.75rem; color:rgba(61,43,26,0.4); margin-top:0.25rem; }
-    .stat-card.pending .stat-value { color:var(--earth); }
-    .stat-card.approved .stat-value { color:var(--forest); }
-
-    /* ── Panel ── */
-    .panel {
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: 0 2px 12px rgba(43,75,33,0.07);
-      overflow: hidden;
-    }
-    .panel-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid rgba(43,75,33,0.08);
+      padding: 1.25rem 1.375rem;
+      box-shadow: var(--shadow);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      border-left: 3px solid transparent;
     }
-    .panel-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--forest); }
+    .stat-card.pending  { border-left-color: var(--sun); }
+    .stat-card.approved { border-left-color: var(--forest); }
+    .stat-card.total    { border-left-color: var(--earth); }
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 0.625rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .stat-icon.pending  { background: var(--sun-bg); }
+    .stat-icon.approved { background: var(--green-bg); }
+    .stat-icon.total    { background: rgba(119,77,37,0.08); }
+    .stat-body { min-width: 0; }
+    .stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(61,43,26,0.45); margin-bottom: 0.2rem; }
+    .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--forest); line-height: 1; }
+    .stat-card.pending  .stat-value { color: var(--earth); }
+    .stat-sub { font-size: 0.7rem; color: rgba(61,43,26,0.35); margin-top: 0.2rem; }
 
-    /* ── Tab view ── */
+    /* ── Tab panels ── */
     #tab-content > div { display: none; }
     #tab-content > div.active { display: block; }
 
-    /* ── Loading spinner ── */
-    .spinner { display:inline-block; width:20px; height:20px; border:2px solid rgba(43,75,33,0.15); border-top-color:var(--forest); border-radius:50%; animation:spin 0.7s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    /* ── Card list ── */
+    .card-list { display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; }
 
-    .loading-row { padding:3rem; text-align:center; color:rgba(61,43,26,0.4); font-style:italic; }
+    /* ── Review card ── */
+    .review-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1.5px solid rgba(43,75,33,0.06);
+      transition: box-shadow 0.15s;
+    }
+    .review-card:hover { box-shadow: var(--shadow-md); }
 
-    /* ── Item cards ── */
-    .item-card {
-      border-bottom: 1px solid rgba(43,75,33,0.07);
-      padding: 1.25rem 1.5rem;
-      display: grid;
-      grid-template-columns: 1fr auto;
+    .review-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1rem 0.625rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .reviewer-info { display: flex; align-items: center; gap: 0.625rem; }
+    .reviewer-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sun), var(--earth));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .reviewer-name { font-weight: 600; color: var(--forest); font-size: 0.9rem; }
+    .reviewer-meta { font-size: 0.72rem; color: rgba(61,43,26,0.45); margin-top: 1px; }
+    .review-right { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; }
+    .stars { color: var(--sun); font-size: 1rem; letter-spacing: 1px; }
+    .stars .empty { color: rgba(61,43,26,0.15); }
+
+    .review-card-body {
+      padding: 0 1rem 0.75rem;
+    }
+    .review-text {
+      font-size: 0.875rem;
+      color: rgba(61,43,26,0.75);
+      line-height: 1.6;
+      background: var(--cream);
+      border-radius: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      border-left: 3px solid rgba(249,175,57,0.4);
+    }
+    .product-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(43,75,33,0.08);
+      color: var(--forest);
+    }
+
+    .review-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 1rem;
+      border-top: 1px solid rgba(43,75,33,0.06);
+      background: rgba(250,246,237,0.5);
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Post card ── */
+    .post-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(43,75,33,0.06);
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .post-card:hover { box-shadow: var(--shadow-md); }
+    .post-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 1rem 1rem 0.625rem;
       gap: 1rem;
-      align-items: start;
-      transition: background 0.15s;
     }
-    .item-card:last-child { border-bottom: none; }
-    .item-card:hover { background: rgba(249,175,57,0.03); }
-    .item-meta { font-size:0.72rem; color:rgba(61,43,26,0.4); margin-bottom:0.25rem; }
-    .item-title { font-weight:600; color:var(--forest); margin-bottom:0.25rem; font-size:0.95rem; }
-    .item-body  { font-size:0.85rem; color:rgba(61,43,26,0.65); line-height:1.5; margin-bottom:0.5rem; max-width:580px; }
-    .item-actions { display:flex; gap:0.5rem; flex-shrink:0; }
+    .post-title-row { flex: 1; min-width: 0; }
+    .post-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: var(--forest);
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+    }
+    .post-excerpt {
+      font-size: 0.8rem;
+      color: rgba(61,43,26,0.55);
+      line-height: 1.5;
+    }
+    .post-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 1rem;
+      border-top: 1px solid rgba(43,75,33,0.06);
+      background: rgba(250,246,237,0.5);
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
 
-    .btn-approve {
-      background: rgba(43,75,33,0.1); color:var(--forest);
-      border:none; border-radius:0.5rem; padding:0.375rem 0.875rem;
-      font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+    /* ── Event card ── */
+    .event-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(43,75,33,0.06);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      transition: box-shadow 0.15s;
     }
-    .btn-approve:hover { background:var(--forest); color:white; }
-    .btn-reject {
-      background: rgba(239,68,68,0.08); color:#dc2626;
-      border:none; border-radius:0.5rem; padding:0.375rem 0.875rem;
-      font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+    .event-card:hover { box-shadow: var(--shadow-md); }
+    .event-date-block {
+      background: var(--forest);
+      color: white;
+      padding: 1rem 0.875rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      text-align: center;
     }
-    .btn-reject:hover { background:#dc2626; color:white; }
-    .btn-delete {
-      background: rgba(239,68,68,0.06); color:#dc2626;
-      border: 1px solid rgba(239,68,68,0.2);
-      border-radius:0.5rem; padding:0.375rem 0.875rem;
-      font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+    .event-date-icon { font-size: 1.25rem; margin-bottom: 0.25rem; }
+    .event-date-text { font-size: 0.65rem; color: rgba(255,255,255,0.65); line-height: 1.3; }
+    .event-body { padding: 0.875rem 1rem; }
+    .event-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      color: var(--forest);
+      margin-bottom: 0.375rem;
     }
-    .btn-delete:hover { background:#dc2626; color:white; border-color:#dc2626; }
+    .event-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .event-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: rgba(61,43,26,0.55);
+    }
+    .event-desc {
+      font-size: 0.78rem;
+      color: rgba(61,43,26,0.5);
+    }
+    .event-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      border-top: 1px solid rgba(43,75,33,0.06);
+      background: rgba(250,246,237,0.5);
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      grid-column: 1 / -1;
+    }
 
-    .badge-pill {
-      display:inline-flex; align-items:center;
-      font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
-      padding:2px 8px; border-radius:999px;
+    /* ── Shared action buttons ── */
+    .actions { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.75rem; font-weight: 600; font-family: 'DM Sans', sans-serif;
+      padding: 0.3rem 0.7rem; border-radius: 0.4rem; border: none;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
-    .badge-pending  { background:rgba(249,175,57,0.18); color:var(--earth); }
-    .badge-approved { background:rgba(43,75,33,0.12);   color:var(--forest); }
-    .badge-rejected { background:rgba(239,68,68,0.1);   color:#dc2626; }
-    .stars-display  { color:var(--sun); font-size:0.9rem; }
+    .btn-approve { background: var(--green-bg); color: #15803d; border: 1px solid var(--green-bdr); }
+    .btn-approve:hover { background: #15803d; color: white; border-color: #15803d; }
+    .btn-reject  { background: var(--sun-bg); color: var(--earth); border: 1px solid rgba(249,175,57,0.3); }
+    .btn-reject:hover  { background: var(--earth); color: white; border-color: var(--earth); }
+    .btn-delete  { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bdr); }
+    .btn-delete:hover  { background: var(--red); color: white; border-color: var(--red); }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.67rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px;
+    }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+    .badge-pending  { background: rgba(249,175,57,0.15); color: #92400e; }
+    .badge-approved { background: var(--green-bg); color: #15803d; }
+    .badge-rejected { background: var(--red-bg); color: var(--red); }
+
+    /* ── Panel wrapper ── */
+    .panel {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(43,75,33,0.06);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(43,75,33,0.07);
+      display: flex; align-items: center; justify-content: space-between;
+      background: white;
+    }
+    .panel-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--forest); }
+    .panel-count { font-size: 0.75rem; color: rgba(61,43,26,0.4); }
 
     /* ── Create form ── */
     .create-form {
-      padding: 1.5rem;
-      border-top: 1px solid rgba(43,75,33,0.08);
-      background: rgba(249,175,57,0.03);
+      border-top: 2px dashed rgba(43,75,33,0.1);
+      padding: 1.25rem;
+      background: rgba(250,246,237,0.6);
     }
-    .create-form h3 { font-family:'Playfair Display',serif; color:var(--forest); margin-bottom:1rem; font-size:1rem; }
-    .form-grid { display:grid; gap:0.875rem; }
-    .form-row  { display:grid; grid-template-columns:1fr 1fr; gap:0.875rem; }
+    .create-form-title {
+      font-family: 'Playfair Display', serif;
+      color: var(--forest);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-grid { display: grid; gap: 0.75rem; }
+    .form-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     .field label {
-      display:block; font-size:0.8rem; font-weight:600; color:var(--forest); margin-bottom:0.3rem;
+      display: block; font-size: 0.75rem; font-weight: 600;
+      color: var(--forest); margin-bottom: 0.3rem;
     }
-    .field input, .field textarea, .field select {
-      width:100%; background:white; border:1.5px solid rgba(43,75,33,0.15);
-      border-radius:0.625rem; padding:0.625rem 0.875rem; font-size:0.875rem;
-      font-family:'DM Sans',sans-serif; color:var(--bark); outline:none; transition:border-color 0.2s;
+    .field input, .field textarea {
+      width: 100%; background: white;
+      border: 1.5px solid rgba(43,75,33,0.15);
+      border-radius: 0.5rem; padding: 0.5rem 0.75rem;
+      font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+      color: var(--bark); outline: none; transition: border-color 0.15s;
     }
-    .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--sun); }
-    .field textarea { min-height:80px; resize:vertical; }
+    .field input:focus, .field textarea:focus { border-color: var(--sun); }
+    .field textarea { min-height: 72px; resize: vertical; }
     .btn-create {
-      background:var(--sun); color:white; border:none; border-radius:999px;
-      padding:0.625rem 1.5rem; font-size:0.875rem; font-weight:600;
-      cursor:pointer; transition:all 0.2s; margin-top:0.25rem;
+      background: var(--forest); color: white; border: none;
+      border-radius: 0.5rem; padding: 0.5rem 1.25rem;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+      display: inline-flex; align-items: center; gap: 0.375rem;
     }
-    .btn-create:hover { background:var(--sun-d); }
-    .btn-create:disabled { opacity:0.6; cursor:not-allowed; }
+    .btn-create:hover { background: var(--forest-l); }
+
+    /* ── States ── */
+    .loading-state {
+      padding: 2.5rem; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2.5px solid rgba(43,75,33,0.12);
+      border-top-color: var(--forest);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 0.82rem; color: rgba(61,43,26,0.4); }
 
     .empty-state {
-      padding: 3rem 1.5rem; text-align:center;
-      color:rgba(61,43,26,0.35); font-style:italic; font-size:0.9rem;
+      padding: 3rem 1.5rem; text-align: center;
     }
-    .success-toast {
-      position:fixed; bottom:1.5rem; right:1.5rem;
-      background:var(--forest); color:white;
-      padding:0.875rem 1.25rem; border-radius:0.75rem;
-      font-size:0.875rem; font-weight:500;
-      box-shadow:0 4px 20px rgba(43,75,33,0.3);
-      transform:translateY(100px); opacity:0;
-      transition:all 0.3s; z-index:100;
+    .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .empty-title { font-weight: 600; color: rgba(61,43,26,0.4); font-size: 0.9rem; }
+    .empty-sub { font-size: 0.78rem; color: rgba(61,43,26,0.3); margin-top: 0.25rem; }
+
+    .error-state {
+      padding: 1.25rem; margin: 1rem;
+      background: var(--red-bg); border: 1px solid var(--red-bdr);
+      border-radius: 0.625rem; color: var(--red); font-size: 0.82rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
-    .success-toast.show { transform:translateY(0); opacity:1; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      padding: 0.75rem 1.125rem; border-radius: 0.625rem;
+      font-size: 0.85rem; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      transform: translateY(80px) scale(0.95); opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100; display: flex; align-items: center; gap: 0.5rem;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0) scale(1); opacity: 1; }
+    .toast.success { background: var(--forest); color: white; }
+    .toast.error   { background: var(--red); color: white; }
+    .toast.warning { background: var(--earth); color: white; }
   </style>
 </head>
 <body>
 
-  <!-- ── Sidebar ───────────────────────────────────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      Solar Blessing
-      <span>Admin Dashboard</span>
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    Solar Blessing
+    <span>Admin Portal</span>
+  </div>
+
+  <div class="nav-section">Content</div>
+  <nav style="display:flex;flex-direction:column;gap:2px;">
+    <button class="nav-item active" onclick="switchTab('reviews')" id="nav-reviews">
+      ⭐ Reviews
+      <span class="nav-badge" id="badge-reviews">—</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('posts')" id="nav-posts">
+      📝 Blog Posts
+      <span class="nav-badge" id="badge-posts">—</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('events')" id="nav-events">
+      📅 Events
+      <span class="nav-badge" id="badge-events">—</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-info">
+      <div class="admin-avatar">{adminId.slice(0,1).toUpperCase()}</div>
+      <div class="admin-name">{adminId}</div>
     </div>
-
-    <nav style="display:flex;flex-direction:column;gap:0.25rem;">
-      <button class="nav-item active" onclick="switchTab('reviews')" id="nav-reviews">
-        ⭐ Reviews <span class="badge" id="badge-reviews">…</span>
+    <form action="/api/admin/logout" method="POST">
+      <button type="submit" class="logout-btn">
+        <span>↩</span> Sign Out
       </button>
-      <button class="nav-item" onclick="switchTab('posts')" id="nav-posts">
-        📝 Blog Posts <span class="badge" id="badge-posts">…</span>
-      </button>
-      <button class="nav-item" onclick="switchTab('events')" id="nav-events">
-        📅 Events <span class="badge" id="badge-events">…</span>
-      </button>
-    </nav>
+    </form>
+  </div>
+</aside>
 
-    <div class="sidebar-footer">
-      <form action="/api/admin/logout" method="POST">
-        <button type="submit" class="logout-btn">
-          ← Sign Out
-        </button>
-      </form>
-      <p style="font-size:0.7rem;color:rgba(255,255,255,0.25);padding:0.5rem 0.75rem 0;">
-        Signed in as {adminId}
-      </p>
-    </div>
-  </aside>
-
-  <!-- ── Main ─────────────────────────────────────────────────────────────── -->
-  <div class="main">
-    <div class="topbar">
+<!-- ── Main ── -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
       <h1 class="topbar-title" id="page-title">Reviews</h1>
-      <span class="topbar-user">Solar Blessing Admin</span>
     </div>
+    <div class="topbar-right" id="topbar-filter">
+      <select class="filter-select" id="review-filter" onchange="loadReviews()">
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+        <option value="">All</option>
+      </select>
+    </div>
+  </div>
 
-    <div class="content">
+  <div class="content">
 
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card pending">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card pending">
+        <div class="stat-body">
           <div class="stat-label">Pending Approval</div>
-          <div class="stat-value" id="stat-pending">…</div>
-          <div class="stat-sub">Across all content</div>
+          <div class="stat-value" id="stat-pending">—</div>
+          <div class="stat-sub">Reviews + posts + events</div>
         </div>
-        <div class="stat-card approved">
-          <div class="stat-label">Live on Site</div>
-          <div class="stat-value" id="stat-approved">…</div>
-          <div class="stat-sub">Approved content</div>
-        </div>
-        <div class="stat-card">
+      </div>
+      <div class="stat-card approved">
+        <div class="stat-body">
           <div class="stat-label">Total Reviews</div>
-          <div class="stat-value" id="stat-reviews">…</div>
+          <div class="stat-value" id="stat-reviews">—</div>
           <div class="stat-sub">All products combined</div>
         </div>
       </div>
+      <div class="stat-card total">
+        <div class="stat-body">
+          <div class="stat-label">Live on Updates Page</div>
+          <div class="stat-value" id="stat-approved">—</div>
+          <div class="stat-sub">Posts + events published</div>
+        </div>
+      </div>
+    </div>
 
-      <!-- Tab panels -->
-      <div id="tab-content">
+    <!-- Tab panels -->
+    <div id="tab-content">
 
-        <!-- ── Reviews tab ── -->
-        <div id="tab-reviews" class="active">
-          <div class="panel">
-            <div class="panel-header">
-              <span class="panel-title">Customer Reviews</span>
-              <div style="display:flex;gap:0.5rem;">
-                <select id="review-filter" onchange="loadReviews()" style="font-size:0.8rem;border:1px solid rgba(43,75,33,0.15);border-radius:0.5rem;padding:0.25rem 0.5rem;background:white;color:var(--bark);outline:none;">
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="">All</option>
-                </select>
-              </div>
-            </div>
-            <div id="reviews-list"><div class="loading-row"><div class="spinner"></div></div></div>
+      <!-- ── Reviews ── -->
+      <div id="tab-reviews" class="active">
+        <div id="reviews-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading reviews…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Posts ── -->
+      <div id="tab-posts">
+        <div id="posts-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading posts…</div>
           </div>
         </div>
 
-        <!-- ── Posts tab ── -->
-        <div id="tab-posts">
-          <div class="panel" style="margin-bottom:1.5rem;">
-            <div class="panel-header">
-              <span class="panel-title">Blog Posts</span>
-              <select id="post-filter" onchange="loadPosts()" style="font-size:0.8rem;border:1px solid rgba(43,75,33,0.15);border-radius:0.5rem;padding:0.25rem 0.5rem;background:white;color:var(--bark);outline:none;">
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="">All</option>
-              </select>
-            </div>
-            <div id="posts-list"><div class="loading-row"><div class="spinner"></div></div></div>
-            <div class="create-form">
-              <h3>✏️ New Blog Post</h3>
-              <div class="form-grid">
-                <div class="field"><label>Title</label><input type="text" id="post-title" maxlength="200" placeholder="Spring Batch: New Ginger Kombucha…" /></div>
-                <div class="field"><label>Excerpt (shown on Updates page)</label><textarea id="post-excerpt" rows="2" maxlength="400" placeholder="Short summary…"></textarea></div>
-                <div class="field"><label>Full body</label><textarea id="post-body" maxlength="8000" placeholder="Full post content…"></textarea></div>
-                <div>
-                  <button class="btn-create" onclick="createPost()">Publish Post →</button>
-                </div>
-              </div>
-            </div>
+        <!-- Create post form -->
+        <div class="create-form" style="margin-top:1rem;border-radius:var(--radius);border:1.5px solid rgba(43,75,33,0.06);">
+          <div class="create-form-title">New Blog Post</div>
+          <div class="form-grid">
+            <div class="field"><label>Title</label><input type="text" id="post-title" maxlength="200" placeholder="Spring Batch: New Ginger Kombucha…" /></div>
+            <div class="field"><label>Excerpt <span style="font-weight:400;color:rgba(61,43,26,0.4)">(shown on Updates page)</span></label><textarea id="post-excerpt" rows="2" maxlength="400" placeholder="Short summary shown in the listing…"></textarea></div>
+            <div class="field"><label>Full content</label><textarea id="post-body" maxlength="8000" placeholder="Full post body…" style="min-height:120px;"></textarea></div>
+            <div><button class="btn-create" onclick="createPost()">✓ Publish Post</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Events ── -->
+      <div id="tab-events">
+        <div id="events-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading events…</div>
           </div>
         </div>
 
-        <!-- ── Events tab ── -->
-        <div id="tab-events">
-          <div class="panel">
-            <div class="panel-header">
-              <span class="panel-title">Events</span>
-              <select id="event-filter" onchange="loadEvents()" style="font-size:0.8rem;border:1px solid rgba(43,75,33,0.15);border-radius:0.5rem;padding:0.25rem 0.5rem;background:white;color:var(--bark);outline:none;">
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="">All</option>
-              </select>
+        <!-- Create event form -->
+        <div class="create-form" style="margin-top:1rem;border-radius:var(--radius);border:1.5px solid rgba(43,75,33,0.06);">
+          <div class="create-form-title">Add New Event</div>
+          <div class="form-grid">
+            <div class="form-row">
+              <div class="field"><label>Event title</label><input type="text" id="event-title" maxlength="200" placeholder="Downtown Farmers Market" /></div>
+              <div class="field"><label>Date</label><input type="text" id="event-date" maxlength="80" placeholder="Saturday, April 5" /></div>
             </div>
-            <div id="events-list"><div class="loading-row"><div class="spinner"></div></div></div>
-            <div class="create-form">
-              <h3>📅 New Event</h3>
-              <div class="form-grid">
-                <div class="form-row">
-                  <div class="field"><label>Event title</label><input type="text" id="event-title" maxlength="200" placeholder="Downtown Farmers Market" /></div>
-                  <div class="field"><label>Date (e.g. Saturday, April 5)</label><input type="text" id="event-date" maxlength="80" placeholder="Saturday, April 5" /></div>
-                </div>
-                <div class="form-row">
-                  <div class="field"><label>Time</label><input type="text" id="event-time" maxlength="80" placeholder="8:00 AM – 2:00 PM" /></div>
-                  <div class="field"><label>Location</label><input type="text" id="event-location" maxlength="200" placeholder="City Center Plaza" /></div>
-                </div>
-                <div class="field"><label>Description</label><textarea id="event-desc" rows="2" maxlength="600" placeholder="Come find us at booth #12!"></textarea></div>
-                <div><button class="btn-create" onclick="createEvent()">Add Event →</button></div>
-              </div>
+            <div class="form-row">
+              <div class="field"><label>Time</label><input type="text" id="event-time" maxlength="80" placeholder="8:00 AM – 2:00 PM" /></div>
+              <div class="field"><label>Location</label><input type="text" id="event-location" maxlength="200" placeholder="City Center Plaza" /></div>
             </div>
+            <div class="field"><label>Description</label><textarea id="event-desc" rows="2" maxlength="600" placeholder="Come find us at booth #12!"></textarea></div>
+            <div><button class="btn-create" onclick="handleCreateEvent()">✓ Add Event</button></div>
           </div>
         </div>
+      </div>
 
-      </div><!-- /tab-content -->
-    </div><!-- /content -->
-  </div><!-- /main -->
+    </div><!-- /tab-content -->
+  </div><!-- /content -->
+</div><!-- /main -->
 
-  <!-- Toast -->
-  <div class="success-toast" id="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script is:inline>
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function esc(str) {
-  return String(str)
+  return String(str ?? '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 
 function stars(n) {
-  return '★'.repeat(n) + '☆'.repeat(5 - n);
+  n = Math.max(0, Math.min(5, n));
+  return Array.from({length:5}, (_,i) =>
+    `<span style="color:${i < n ? '#f9af39' : 'rgba(61,43,26,0.15)'}">★</span>`
+  ).join('');
+}
+
+function initials(name) {
+  return (name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
 }
 
 function fmtDate(iso) {
   try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
-  catch { return iso; }
+  catch { return iso || ''; }
 }
 
-function getCsrf() {
+function fmtProduct(p) {
+  return { kombucha:'Kombucha', sobolo:'Sobolo', salve:'Hand Salve' }[p] || p;
+}
+
+// ── CSRF — read from cookie, refresh from server if missing ───────────────────
+async function getCsrf() {
+  // Try cookie first (set by middleware or login)
   const m = document.cookie.match(/csrf_token=([^;]+)/);
-  return m ? m[1] : '';
+  if (m && m[1]) return m[1];
+  // If missing, hit a lightweight endpoint that will set it via middleware
+  // We do a GET to the stats endpoint — middleware runs and sets the cookie
+  await fetch('/api/admin/stats', { credentials: 'include' }).catch(() => {});
+  const m2 = document.cookie.match(/csrf_token=([^;]+)/);
+  return m2 ? m2[1] : '';
 }
 
-function toast(msg) {
+function showToast(msg, type = 'success') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3200);
 }
 
 async function apiFetch(path, opts = {}) {
-  const csrf = getCsrf();
+  const csrf = await getCsrf();
   const res = await fetch(path, {
     ...opts,
     credentials: 'include',
-    headers: { 'Content-Type':'application/json', 'X-CSRF-Token': csrf, ...(opts.headers ?? {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrf,
+      ...(opts.headers ?? {}),
+    },
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
@@ -438,14 +744,19 @@ async function apiFetch(path, opts = {}) {
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
-const tabTitles = { reviews:'Reviews', posts:'Blog Posts', events:'Events' };
+const TAB_CONFIG = {
+  reviews: { title: 'Reviews',    filter: '<select class="filter-select" id="review-filter" onchange="loadReviews()"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="">All</option></select>' },
+  posts:   { title: 'Blog Posts', filter: '<select class="filter-select" id="post-filter" onchange="loadPosts()"><option value="pending">Pending</option><option value="approved">Approved</option><option value="">All</option></select>' },
+  events:  { title: 'Events',     filter: '<select class="filter-select" id="event-filter" onchange="loadEvents()"><option value="approved">Approved</option><option value="pending">Pending</option><option value="">All</option></select>' },
+};
 
 function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#tab-content > div').forEach(d => d.classList.remove('active'));
   document.getElementById('nav-' + tab).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('page-title').textContent = tabTitles[tab];
+  document.getElementById('page-title').textContent = TAB_CONFIG[tab].title;
+  document.getElementById('topbar-filter').innerHTML = TAB_CONFIG[tab].filter;
   if (tab === 'reviews') loadReviews();
   if (tab === 'posts')   loadPosts();
   if (tab === 'events')  loadEvents();
@@ -456,117 +767,191 @@ function switchTab(tab) {
 async function loadStats() {
   try {
     const s = await apiFetch('/api/admin/stats');
-    document.getElementById('stat-pending').textContent  = s.pendingReviews + s.pendingPosts + s.pendingEvents;
-    document.getElementById('stat-approved').textContent = s.approvedReviews + s.approvedPosts + s.approvedEvents;
-    document.getElementById('stat-reviews').textContent  = s.approvedReviews + s.pendingReviews;
-    document.getElementById('badge-reviews').textContent = s.pendingReviews;
-    document.getElementById('badge-posts').textContent   = s.pendingPosts;
-    document.getElementById('badge-events').textContent  = s.pendingEvents;
+
+    // Top stat cards
+    const pending      = s.pendingReviews + s.pendingPosts + s.pendingEvents;
+    const liveOnSite   = s.approvedPosts  + s.approvedEvents;   // what shows on updates page
+    const totalReviews = s.totalReviews ?? (s.approvedReviews + s.pendingReviews + (s.rejectedReviews ?? 0));
+
+    document.getElementById('stat-pending').textContent  = pending;
+    document.getElementById('stat-approved').textContent = liveOnSite;
+    document.getElementById('stat-reviews').textContent  = totalReviews;
+
+    // Sidebar badges — show pending count, red when > 0
+    function setBadge(id, count) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = count > 0 ? count : '✓';
+      el.classList.toggle('has-items', count > 0);
+      el.style.background = count > 0 ? 'var(--red)' : 'rgba(0,0,0,0.2)';
+      el.style.color = 'white';
+    }
+    setBadge('badge-reviews', s.pendingReviews);
+    setBadge('badge-posts',   s.pendingPosts);
+    setBadge('badge-events',  s.pendingEvents);
   } catch(e) {
-    console.error('Stats load failed', e);
+    console.error('Stats failed:', e);
+    // Show dashes so it's obvious something is wrong
+    ['stat-pending','stat-approved','stat-reviews'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '!';
+    });
   }
 }
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
 
-async function loadReviews() {
-  const status = document.getElementById('review-filter').value;
-  const el = document.getElementById('reviews-list');
-  el.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
-  try {
-    const items = await apiFetch(`/api/admin/reviews${status ? '?status=' + status : ''}`);
-    if (!items.length) { el.innerHTML = '<div class="empty-state">No reviews found.</div>'; return; }
-    el.innerHTML = items.map(r => `
-      <div class="item-card" id="review-${esc(r.id)}">
-        <div>
-          <div class="item-meta">
-            <span class="badge-pill badge-${esc(r.status)}">${esc(r.status)}</span>
-            &nbsp;${esc(r.product)} &bull; ${fmtDate(r.createdAt)}
+function renderReviews(items) {
+  if (!items.length) return `
+    <div class="empty-state">
+      <div class="empty-title">No reviews found</div>
+      <div class="empty-sub">Check a different filter above</div>
+    </div>`;
+
+  return `<div class="card-list">${items.map(r => `
+    <div class="review-card" id="review-${esc(r.id)}">
+      <div class="review-card-header">
+        <div class="reviewer-info">
+          <div class="reviewer-avatar">${initials(r.name)}</div>
+          <div>
+            <div class="reviewer-name">${esc(r.name)}</div>
+            <div class="reviewer-meta">${fmtProduct(r.product)} &bull; ${fmtDate(r.createdAt)}</div>
           </div>
-          <div class="item-title">${esc(r.name)} &nbsp;<span class="stars-display">${stars(r.rating)}</span></div>
-          <div class="item-body">${esc(r.body)}</div>
         </div>
-        <div class="item-actions">
-          ${r.status !== 'approved' ? `<button class="btn-approve" onclick="moderateReview('${esc(r.id)}','approve')">Approve</button>` : ''}
-          ${r.status !== 'rejected' ? `<button class="btn-reject"  onclick="moderateReview('${esc(r.id)}','reject')">Reject</button>`  : ''}
-          <button class="btn-delete" onclick="deleteReview('${esc(r.id)}')">Delete</button>
+        <div class="review-right">
+          <div class="stars">${stars(r.rating)}</div>
+          <span class="badge badge-${esc(r.status)}">${esc(r.status)}</span>
         </div>
-      </div>`).join('');
+      </div>
+      <div class="review-card-body">
+        <div class="review-text">"${esc(r.body)}"</div>
+      </div>
+      <div class="review-card-footer">
+        <div class="actions">
+          ${r.status !== 'approved' ? `<button class="btn btn-approve" onclick="moderateReview('${esc(r.id)}','approve')">✓ Approve</button>` : ''}
+          ${r.status !== 'rejected' ? `<button class="btn btn-reject"  onclick="moderateReview('${esc(r.id)}','reject')">✕ Reject</button>`  : ''}
+          <button class="btn btn-delete" onclick="deleteReview('${esc(r.id)}')">Delete</button>
+        </div>
+        <span style="font-size:0.7rem;color:rgba(61,43,26,0.35);">${esc(r.id)}</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+async function loadReviews() {
+  const status = document.getElementById('review-filter')?.value ?? 'pending';
+  const el = document.getElementById('reviews-list');
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div class="loading-text">Loading reviews…</div></div>';
+  try {
+    const items = await apiFetch(`/api/admin/reviews${status ? '?status='+status : ''}`);
+    el.innerHTML = renderReviews(items);
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#dc2626;">Failed to load reviews: ${esc(e.message)}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load reviews: ${esc(e.message)}</div>`;
   }
 }
 
 async function moderateReview(id, action) {
   try {
     await apiFetch(`/api/admin/reviews/${id}`, { method:'PATCH', body: JSON.stringify({ action }) });
-    toast(action === 'approve' ? '✅ Review approved and live!' : '🚫 Review rejected.');
+    showToast(action === 'approve' ? 'Review approved and live!' : '✕ Review rejected.');
     loadReviews(); loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function deleteReview(id) {
-  if (!confirm('Permanently delete this review?')) return;
+  if (!confirm('Permanently delete this review? This cannot be undone.')) return;
   try {
     await apiFetch(`/api/admin/reviews/${id}`, { method:'DELETE' });
     document.getElementById('review-' + id)?.remove();
-    toast('🗑️ Review deleted.');
+    showToast('Review deleted.');
     loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ── Posts ─────────────────────────────────────────────────────────────────────
 
+function renderPosts(items) {
+  if (!items.length) return `
+    <div class="empty-state">
+      <div class="empty-title">No posts found</div>
+      <div class="empty-sub">Create one using the form below</div>
+    </div>`;
+
+  return `<div class="panel"><div class="panel-header">
+      <span class="panel-title">Blog Posts</span>
+      <span class="panel-count">${items.length} post${items.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="card-list">${items.map(p => `
+    <div class="post-card" id="post-${esc(p.id)}">
+      <div class="post-card-header">
+        <div class="post-title-row">
+          <div class="post-title">${esc(p.title)}</div>
+          ${p.excerpt ? `<div class="post-excerpt">${esc(p.excerpt)}</div>` : ''}
+        </div>
+        <span class="badge badge-${esc(p.status)}">${esc(p.status)}</span>
+      </div>
+      <div class="post-card-footer">
+        <div class="actions">
+          ${p.status !== 'approved' ? `<button class="btn btn-approve" onclick="moderatePost('${esc(p.id)}','approve')">✓ Approve</button>` : ''}
+          ${p.status !== 'rejected' ? `<button class="btn btn-reject"  onclick="moderatePost('${esc(p.id)}','reject')">✕ Reject</button>`  : ''}
+          <button class="btn btn-delete" onclick="deletePost('${esc(p.id)}')">Delete</button>
+        </div>
+        <span style="font-size:0.7rem;color:rgba(61,43,26,0.35);">${fmtDate(p.createdAt)}</span>
+      </div>
+    </div>`).join('')}</div></div>`;
+}
+
 async function loadPosts() {
-  const status = document.getElementById('post-filter').value;
+  const status = document.getElementById('post-filter')?.value ?? 'approved';
   const el = document.getElementById('posts-list');
-  el.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div class="loading-text">Loading posts…</div></div>';
   try {
-    const items = await apiFetch(`/api/admin/posts${status ? '?status=' + status : ''}`);
-    if (!items.length) { el.innerHTML = '<div class="empty-state">No posts found.</div>'; return; }
-    el.innerHTML = items.map(p => `
-      <div class="item-card" id="post-${esc(p.id)}">
-        <div>
-          <div class="item-meta">
-            <span class="badge-pill badge-${esc(p.status)}">${esc(p.status)}</span>
-            &nbsp;${fmtDate(p.createdAt)}
-          </div>
-          <div class="item-title">${esc(p.title)}</div>
-          <div class="item-body">${esc(p.excerpt)}</div>
-        </div>
-        <div class="item-actions">
-          ${p.status !== 'approved' ? `<button class="btn-approve" onclick="moderatePost('${esc(p.id)}','approve')">Approve</button>` : ''}
-          ${p.status !== 'rejected' ? `<button class="btn-reject"  onclick="moderatePost('${esc(p.id)}','reject')">Reject</button>`  : ''}
-          <button class="btn-delete" onclick="deletePost('${esc(p.id)}')">Delete</button>
-        </div>
-      </div>`).join('');
+    const items = await apiFetch(`/api/admin/posts${status ? '?status='+status : ''}`);
+    el.innerHTML = renderPosts(items);
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#dc2626;">Failed to load posts: ${esc(e.message)}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load posts: ${esc(e.message)}</div>`;
   }
 }
 
 async function createPost() {
-  const title   = document.getElementById('post-title').value.trim();
-  const excerpt = document.getElementById('post-excerpt').value.trim();
-  const body    = document.getElementById('post-body').value.trim();
-  if (!title || !body) { toast('⚠️ Title and body are required.'); return; }
+  const titleEl   = document.getElementById('post-title');
+  const excerptEl = document.getElementById('post-excerpt');
+  const bodyEl    = document.getElementById('post-body');
+  const btn       = document.querySelector('[onclick="createPost()"]');
+
+  const title   = titleEl.value.trim();
+  const excerpt = excerptEl.value.trim();
+  const body    = bodyEl.value.trim();
+
+  if (!title || !body) { showToast('Title and content are required.', 'warning'); return; }
+
+  // Disable button while submitting
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+
   try {
-    await apiFetch('/api/admin/posts', { method:'POST', body: JSON.stringify({ title, excerpt, body }) });
-    toast('✅ Post created!');
-    document.getElementById('post-title').value   = '';
-    document.getElementById('post-excerpt').value = '';
-    document.getElementById('post-body').value    = '';
-    document.getElementById('post-filter').value  = 'approved';
-    loadPosts(); loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+    const post = await apiFetch('/api/admin/posts', { method:'POST', body: JSON.stringify({ title, excerpt, body }) });
+    showToast('Post published and live on Updates page!');
+    titleEl.value   = '';
+    excerptEl.value = '';
+    bodyEl.value    = '';
+    // Switch filter to approved so we can see the new post
+    const filterEl = document.getElementById('post-filter');
+    if (filterEl) filterEl.value = 'approved';
+    loadPosts();
+    loadStats();
+  } catch(e) {
+    console.error('createPost error:', e);
+    showToast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Publish Post'; }
+  }
 }
 
 async function moderatePost(id, action) {
   try {
     await apiFetch(`/api/admin/posts/${id}`, { method:'PATCH', body: JSON.stringify({ action }) });
-    toast(action === 'approve' ? '✅ Post is now live!' : '🚫 Post rejected.');
+    showToast(action === 'approve' ? 'Post is now live!' : '✕ Post rejected.');
     loadPosts(); loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function deletePost(id) {
@@ -574,63 +959,96 @@ async function deletePost(id) {
   try {
     await apiFetch(`/api/admin/posts/${id}`, { method:'DELETE' });
     document.getElementById('post-' + id)?.remove();
-    toast('🗑️ Post deleted.');
+    showToast('Post deleted.');
     loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
 
+function renderEvents(items) {
+  if (!items.length) return `
+    <div class="empty-state">
+      <div class="empty-title">No events found</div>
+      <div class="empty-sub">Add one using the form below</div>
+    </div>`;
+
+  return `<div class="panel"><div class="panel-header">
+      <span class="panel-title">Events</span>
+      <span class="panel-count">${items.length} event${items.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="card-list">${items.map(ev => `
+    <div class="event-card" id="event-${esc(ev.id)}">
+      <div class="event-date-block">
+        <div class="event-date-text">${esc(ev.date)}</div>
+      </div>
+      <div class="event-body">
+        <div class="event-title">${esc(ev.title)}</div>
+        <div class="event-meta-row">
+          ${ev.time     ? `<span class="event-meta-item">${esc(ev.time)}</span>` : ''}
+          ${ev.location ? `<span class="event-meta-item">${esc(ev.location)}</span>` : ''}
+        </div>
+        ${ev.description ? `<div class="event-desc">${esc(ev.description)}</div>` : ''}
+      </div>
+      <div class="event-footer">
+        <div class="actions">
+          ${ev.status !== 'approved' ? `<button class="btn btn-approve" onclick="moderateEvent('${esc(ev.id)}','approve')">✓ Approve</button>` : ''}
+          ${ev.status !== 'rejected' ? `<button class="btn btn-reject"  onclick="moderateEvent('${esc(ev.id)}','reject')">✕ Reject</button>`  : ''}
+          <button class="btn btn-delete" onclick="deleteEvent('${esc(ev.id)}')">Delete</button>
+        </div>
+        <span class="badge badge-${esc(ev.status)}">${esc(ev.status)}</span>
+      </div>
+    </div>`).join('')}</div></div>`;
+}
+
 async function loadEvents() {
-  const status = document.getElementById('event-filter').value;
+  const status = document.getElementById('event-filter')?.value ?? 'approved';
   const el = document.getElementById('events-list');
-  el.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div class="loading-text">Loading events…</div></div>';
   try {
-    const items = await apiFetch(`/api/admin/events${status ? '?status=' + status : ''}`);
-    if (!items.length) { el.innerHTML = '<div class="empty-state">No events found.</div>'; return; }
-    el.innerHTML = items.map(ev => `
-      <div class="item-card" id="event-${esc(ev.id)}">
-        <div>
-          <div class="item-meta">
-            <span class="badge-pill badge-${esc(ev.status)}">${esc(ev.status)}</span>
-            &nbsp;${esc(ev.date)} &bull; ${esc(ev.time)}
-          </div>
-          <div class="item-title">${esc(ev.title)}</div>
-          <div class="item-body">📍 ${esc(ev.location)} &mdash; ${esc(ev.description)}</div>
-        </div>
-        <div class="item-actions">
-          ${ev.status !== 'approved' ? `<button class="btn-approve" onclick="moderateEvent('${esc(ev.id)}','approve')">Approve</button>` : ''}
-          ${ev.status !== 'rejected' ? `<button class="btn-reject"  onclick="moderateEvent('${esc(ev.id)}','reject')">Reject</button>`  : ''}
-          <button class="btn-delete" onclick="deleteEvent('${esc(ev.id)}')">Delete</button>
-        </div>
-      </div>`).join('');
+    const items = await apiFetch(`/api/admin/events${status ? '?status='+status : ''}`);
+    el.innerHTML = renderEvents(items);
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#dc2626;">Failed to load events: ${esc(e.message)}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load events: ${esc(e.message)}</div>`;
   }
 }
 
-async function createEvent() {
-  const title    = document.getElementById('event-title').value.trim();
-  const date     = document.getElementById('event-date').value.trim();
-  const time     = document.getElementById('event-time').value.trim();
-  const location = document.getElementById('event-location').value.trim();
+async function handleCreateEvent() {
+  const title       = document.getElementById('event-title').value.trim();
+  const date        = document.getElementById('event-date').value.trim();
+  const time        = document.getElementById('event-time').value.trim();
+  const venue       = document.getElementById('event-location').value.trim();
   const description = document.getElementById('event-desc').value.trim();
-  if (!title || !date || !location) { toast('⚠️ Title, date, and location are required.'); return; }
+  const btn         = document.querySelector('[onclick="handleCreateEvent()"]');
+
+  if (!title || !date || !venue) { showToast('Title, date and location are required.', 'warning'); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+
   try {
-    await apiFetch('/api/admin/events', { method:'POST', body: JSON.stringify({ title, date, time, location, description }) });
-    toast('✅ Event added!');
-    ['event-title','event-date','event-time','event-location','event-desc'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('event-filter').value = 'approved';
-    loadEvents(); loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+    await apiFetch('/api/admin/events', { method:'POST', body: JSON.stringify({ title, date, time, location: venue, description }) });
+    showToast('Event added and live on Updates page!');
+    ['event-title','event-date','event-time','event-location','event-desc'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    const filterEl = document.getElementById('event-filter');
+    if (filterEl) filterEl.value = 'approved';
+    loadEvents();
+    loadStats();
+  } catch(e) {
+    console.error('handleCreateEvent error:', e);
+    showToast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Add Event'; }
+  }
 }
 
 async function moderateEvent(id, action) {
   try {
     await apiFetch(`/api/admin/events/${id}`, { method:'PATCH', body: JSON.stringify({ action }) });
-    toast(action === 'approve' ? '✅ Event is now live!' : '🚫 Event rejected.');
+    showToast(action === 'approve' ? '✅ Event is now live!' : '✕ Event rejected.');
     loadEvents(); loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function deleteEvent(id) {
@@ -638,9 +1056,9 @@ async function deleteEvent(id) {
   try {
     await apiFetch(`/api/admin/events/${id}`, { method:'DELETE' });
     document.getElementById('event-' + id)?.remove();
-    toast('🗑️ Event deleted.');
+    showToast('Event deleted.');
     loadStats();
-  } catch(e) { toast('❌ Error: ' + e.message); }
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

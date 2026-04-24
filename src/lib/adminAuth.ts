@@ -1,9 +1,3 @@
-/**
- * adminAuth.ts
- * ─────────────────────────────────────────────────────────────────────────────
- * Reusable guard for admin API routes.
- * Checks JWT validity AND CSRF token on mutating requests.
- */
 import {
   verifyAdminToken,
   getTokenFromCookies,
@@ -17,8 +11,12 @@ export interface AuthResult {
   error?:  Response;
 }
 
-const JSON_HEADERS = (extra?: Record<string,string>) =>
-  new Headers({ 'Content-Type': 'application/json', ...securityHeaders(), ...extra });
+export function JSON_HEADERS(): Headers {
+  return new Headers({
+    'Content-Type': 'application/json',
+    ...securityHeaders(),
+  });
+}
 
 export async function requireAdmin(
   request: Request,
@@ -35,26 +33,32 @@ export async function requireAdmin(
     adminId = payload.sub ?? 'admin';
   } catch {
     return {
-      ok: false,
+      ok:     false,
       adminId: '',
-      error: new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401, headers }),
+      error:  new Response(
+        JSON.stringify({ message: 'Unauthorized' }),
+        { status: 401, headers }
+      ),
     };
   }
 
-  // 2. Verify CSRF for mutating methods
+  // 2. Verify CSRF on mutating requests (POST, PATCH, DELETE)
   if (requireCsrf) {
-    const cookieCsrf  = request.headers.get('cookie')?.match(/csrf_token=([^;]+)/)?.[1] ?? null;
-    const headerCsrf  = request.headers.get('x-csrf-token');
+    const cookieCsrf = request.headers.get('cookie')
+      ?.match(/csrf_token=([^;]+)/)?.[1] ?? null;
+    const headerCsrf = request.headers.get('x-csrf-token');
+
     if (!verifyCsrfToken(cookieCsrf, headerCsrf)) {
       return {
-        ok: false,
+        ok:     false,
         adminId: '',
-        error: new Response(JSON.stringify({ message: 'Invalid CSRF token' }), { status: 403, headers }),
+        error:  new Response(
+          JSON.stringify({ message: 'Invalid CSRF token' }),
+          { status: 403, headers }
+        ),
       };
     }
   }
 
   return { ok: true, adminId };
 }
-
-export { JSON_HEADERS };

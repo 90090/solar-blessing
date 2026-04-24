@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { requireAdmin, JSON_HEADERS } from '../../../lib/adminAuth';
-import { getStats } from '../../../lib/db';
+import { requireAdmin, JSON_HEADERS } from '../../lib/adminAuth';
+import { getStats } from '../../lib/db';
 
 export const GET: APIRoute = async ({ request }) => {
   const headers = JSON_HEADERS();

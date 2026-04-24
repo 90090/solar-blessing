@@ -36,9 +36,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- Product cards preview -->
       <div class="grid grid-cols-3 gap-4 animate-fade-up" style="animation-delay:0.15s">
         {[
-          { href: '/kombucha', label: 'Kombucha',         sub: 'Probiotic Elixir',     color: 'border-sun/50 bg-sun/10',       icon: '🍵' },
-          { href: '/sobolo',   label: 'Sobolo',            sub: 'Hibiscus Drink',       color: 'border-forest-light/50 bg-forest-light/10 !bg-white/10 !border-white/20', icon: '🌺' },
-          { href: '/salve',    label: 'Hand Salve-ation',  sub: 'Healing Balm',         color: 'border-earth/50 bg-earth/10',   icon: '✋' },
+          { href: '/kombucha', label: 'Kombucha',         sub: 'Probiotic Elixir',     color: 'border-sun/50 bg-sun/10',       },
+          { href: '/sobolo',   label: 'Sobolo',            sub: 'Hibiscus Drink',       color: 'border-forest-light/50 bg-forest-light/10 !bg-white/10 !border-white/20' },
+          { href: '/salve',    label: 'Hand Salve-ation',  sub: 'Healing Balm',         color: 'border-earth/50 bg-earth/10',   },
         ].map(p => (
           <a
             href={p.href}
@@ -48,7 +48,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               p.color,
             ]}
           >
-            <span class="text-4xl">{p.icon}</span>
             <span class="font-display text-white text-sm text-center leading-tight">{p.label}</span>
             <span class="text-white/50 text-xs text-center">{p.sub}</span>
           </a>
@@ -69,12 +68,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <div class="grid md:grid-cols-3 gap-8">
         {[
-          { icon: '🌿', title: '100% Natural',   body: 'Zero artificial ingredients. Every recipe starts with whole-food inputs sourced from trusted suppliers.' },
-          { icon: '🫙', title: 'Handcrafted',     body: 'Small batches, made with care. Each jar, bottle, and tin gets our full attention from start to finish.' },
-          { icon: '♻️', title: 'Sustainable',     body: 'Earth-first packaging, minimal waste, and practices that give back more than they take.' },
+          { title: '100% Natural',   body: 'Zero artificial ingredients. Every recipe starts with whole-food inputs sourced from trusted suppliers.' },
+          { title: 'Handcrafted',     body: 'Small batches, made with care. Each jar, bottle, and tin gets our full attention from start to finish.' },
+          { title: 'Sustainable',     body: 'Earth-first packaging, minimal waste, and practices that give back more than they take.' },
         ].map(v => (
           <div class="card p-8 text-center space-y-4">
-            <span class="text-5xl block">{v.icon}</span>
             <h3 class="font-display text-2xl text-forest">{v.title}</h3>
             <p class="font-body text-bark/60 leading-relaxed">{v.body}</p>
           </div>
