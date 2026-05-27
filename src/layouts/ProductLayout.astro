@@ -15,12 +15,13 @@ interface Props {
   benefits:   string[];
   steps:      Step[];
   accentClass: string;
-  icon:       string;
+  heroImage?: string;
+  image?: string;
 }
 
 const {
   product, title, tagline, intro, whatIsIt, benefits,
-  steps, accentClass, icon,
+  steps, accentClass, heroImage, image,
 } = Astro.props;
 
 // ── Read CSRF token set by middleware (never set cookies here) ────────────────
@@ -44,13 +45,28 @@ try {
   <!-- Hero -->
   <section class:list={['grain-overlay py-24 px-6', accentClass]}>
     <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-      <div class="text-8xl flex items-center justify-center h-64 bg-white/20 backdrop-blur rounded-3xl text-center">
-        {icon}
+
+      <!-- hero image -->
+      <div class="h-[500px] bg-white/20 backdrop-blur rounded-3xl overflow-hidden shadow-2xl">
+        <img
+          src={heroImage}
+          alt={title}
+          class="w-full h-full object-cover"
+        />
       </div>
+
       <div class="space-y-5 animate-fade-up">
-        <h1 class="font-display text-6xl text-forest">{title}</h1>
-        <p class="font-display text-xl text-sun italic">{tagline}</p>
-        <p class="font-body text-bark leading-relaxed text-lg">{intro}</p>
+        <h1 class="font-display text-6xl text-forest">
+          {title}
+        </h1>
+
+        <p class="font-display text-xl text-sun italic">
+          {tagline}
+        </p>
+
+        <p class="font-body text-bark leading-relaxed text-lg">
+          {intro}
+        </p>
       </div>
     </div>
   </section>
@@ -59,22 +75,40 @@ try {
   <section class="section-pad bg-white">
     <div class="container-xl grid lg:grid-cols-2 gap-16 items-start">
       <div class="space-y-4">
-        <h2 class="font-display text-4xl text-forest">What is {title}?</h2>
-        <p class="font-body text-bark/70 leading-relaxed">{whatIsIt}</p>
+        <h2 class="font-display text-4xl text-forest">
+          What is {title}?
+        </h2>
+
+        <p class="font-body text-bark/70 text-lg leading-relaxed">
+          {whatIsIt}
+        </p>
+
         <div class="pt-2">
-          <h3 class="font-semibold text-forest mb-3">Benefits include:</h3>
+          <h3 class="font-semibold text-forest mb-3">
+            Benefits include:
+          </h3>
+
           <ul class="space-y-2">
             {benefits.map(b => (
               <li class="flex items-center gap-3 text-bark/70">
-                <span class="w-5 h-5 rounded-full bg-sun/30 flex items-center justify-center flex-shrink-0 text-xs">✓</span>
+                <span class="w-5 h-5 rounded-full bg-sun/30 flex items-center justify-center flex-shrink-0 text-xs">
+                  ✓
+                </span>
+
                 {b}
               </li>
             ))}
           </ul>
         </div>
       </div>
-      <div class="h-72 rounded-2xl bg-cream flex items-center justify-center text-6xl">
-        {icon}
+
+      <!-- image box -->
+      <div class="h-65 rounded-2xl bg-cream overflow-hidden shadow-lg">
+        <img
+          src={image}
+          alt={title}
+          class="w-full h-full object-cover"
+        />
       </div>
     </div>
   </section>

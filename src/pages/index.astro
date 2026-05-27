@@ -24,8 +24,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           Crafted
         </h1>
         <p class="font-body text-white/70 text-lg md:text-xl max-w-md leading-relaxed">
-          Handcrafted Kombucha, Sobolo, and healing Hand Salve-ation.
-          Nourish your body with the power of nature.
+          Kombucha, Sobolo and Hand Salve-ation, fearfully and wonderfully made to nourish
         </p>
         <div class="flex flex-wrap gap-4">
           <a href="/kombucha" class="btn-primary">Explore Products</a>
@@ -36,9 +35,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <!-- Product cards preview -->
       <div class="grid grid-cols-3 gap-4 animate-fade-up" style="animation-delay:0.15s">
         {[
-          { href: '/kombucha', label: 'Kombucha',         sub: 'Probiotic Elixir',     color: 'border-sun/50 bg-sun/10',       },
-          { href: '/sobolo',   label: 'Sobolo',            sub: 'Hibiscus Drink',       color: 'border-forest-light/50 bg-forest-light/10 !bg-white/10 !border-white/20' },
-          { href: '/salve',    label: 'Hand Salve-ation',  sub: 'Healing Balm',         color: 'border-earth/50 bg-earth/10',   },
+          { href: '/kombucha', label: 'Kombucha',         sub: 'Invigorating Probiotic Tea',     color: 'border-sun/50 bg-sun/10',       },
+          { href: '/sobolo',   label: 'Sobolo',            sub: 'Refreshing Spiced Hibiscus Drink',       color: 'border-forest-light/50 bg-forest-light/10 !bg-white/10 !border-white/20' },
+          { href: '/salve',    label: 'Hand Salve-ation',  sub: 'Soothing Hand Salve',         color: 'border-earth/50 bg-earth/10',   },
         ].map(p => (
           <a
             href={p.href}
@@ -68,7 +67,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <div class="grid md:grid-cols-3 gap-8">
         {[
-          { title: '100% Natural',   body: 'Zero artificial ingredients. Every recipe starts with whole-food inputs sourced from trusted suppliers.' },
+          { title: '100% Natural',   body: 'Zero artificial ingredients. Every recipe starts with whole-food inputs and finishes with prayer over it.' },
           { title: 'Handcrafted',     body: 'Small batches, made with care. Each jar, bottle, and tin gets our full attention from start to finish.' },
           { title: 'Sustainable',     body: 'Earth-first packaging, minimal waste, and practices that give back more than they take.' },
         ].map(v => (
@@ -82,33 +81,72 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </section>
 
   <!-- ── Products strip ────────────────────────────────────────────────────── -->
-  <section class="section-pad bg-white">
-    <div class="container-xl">
-      <h2 class="font-display text-4xl md:text-5xl text-forest mb-12">Our Products</h2>
-      <div class="grid md:grid-cols-3 gap-10">
-        {[
-          { href: '/kombucha', name: 'Kombucha',        sub: 'Probiotic-rich fermented tea',    color: 'bg-sun/15',    accent: '#f9af39' },
-          { href: '/sobolo',   name: 'Sobolo',           sub: 'Refreshing hibiscus drink',       color: 'bg-forest/10', accent: '#2b4b21' },
-          { href: '/salve',    name: 'Hand Salve-ation', sub: 'Natural healing hand balm',       color: 'bg-earth/10',  accent: '#774d25' },
-        ].map(p => (
-          <a href={p.href} class="card group overflow-visible">
-            <div class:list={['h-52 rounded-t-2xl flex items-center justify-center text-7xl', p.color]}>
-              {p.href === '/kombucha' ? '🍵' : p.href === '/sobolo' ? '🌺' : '✋'}
-            </div>
-            <div class="p-6 space-y-2">
-              <h3 class="font-display text-2xl text-forest">{p.name}</h3>
-              <p class="text-bark/60 font-body text-sm">{p.sub}</p>
-              <span
-                class="inline-block mt-3 text-sm font-semibold transition-all duration-200 group-hover:translate-x-1"
-                style={`color: ${p.accent}`}
-              >
-                Learn more →
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
+<section class="section-pad bg-white">
+  <div class="container-xl">
+    <h2 class="font-display text-4xl md:text-5xl text-forest mb-12">
+      Our Products
+    </h2>
+
+    <div class="grid md:grid-cols-3 gap-10">
+      {[
+        {
+          href: '/kombucha',
+          name: 'Kombucha',
+          sub: 'Invigorating Probiotic Tea',
+          color: 'bg-sun/15',
+          accent: '#f9af39',
+          img: '/images/kombucha.png',
+          alt: 'Kombucha drink',
+        },
+        {
+          href: '/sobolo',
+          name: 'Sobolo',
+          sub: 'Refreshing Spiced Hibiscus Drink',
+          color: 'bg-forest/10',
+          accent: '#2b4b21',
+          img: '/images/sobolo.png',
+          alt: 'Sobolo hibiscus drink',
+        },
+        {
+          href: '/salve',
+          name: 'Hand Salve-ation',
+          sub: 'Soothing Hand Salve',
+          color: 'bg-earth/10',
+          accent: '#774d25',
+          img: '/images/handsalve.png',
+          alt: 'Hand salve product',
+        },
+      ].map(p => (
+        <a href={p.href} class="card group overflow-visible">
+          <div
+            class:list={[
+              'h-52 rounded-t-2xl flex items-center justify-center',
+              p.color,
+            ]}
+          >
+            <img
+              src={p.img}
+              alt={p.alt}
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100"
+            />
+          </div>
+
+          <div class="p-6 space-y-2">
+            <h3 class="font-display text-2xl text-forest">{p.name}</h3>
+
+            <p class="text-bark/60 font-body text-sm">{p.sub}</p>
+
+            <span
+              class="inline-block mt-3 text-sm font-semibold transition-all duration-200 group-hover:translate-x-1"
+              style={`color: ${p.accent}`}
+            >
+              Learn more →
+            </span>
+          </div>
+        </a>
+      ))}
     </div>
-  </section>
+  </div>
+</section>
 
 </BaseLayout>
