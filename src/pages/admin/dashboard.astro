@@ -1,4 +1,5 @@
 ---
+export const prerender = false;
 import { verifyAdminToken, getTokenFromCookies, securityHeaders } from '../../lib/security';
 
 let adminId = '';
@@ -7,7 +8,8 @@ try {
   if (!token) return Astro.redirect('/admin?error=session');
   const payload = await verifyAdminToken(token);
   adminId = payload.sub ?? 'admin';
-} catch {
+} catch (err) {
+  console.error('DASHBOARD JWT verify failed:', err);
   return Astro.redirect('/admin?error=session');
 }
 

@@ -1,7 +1,10 @@
 /**
  * POST /api/admin/login
  * Rate-limited, bcrypt verified, issues JWT + CSRF cookies.
+ * Credentials loaded from Secrets Manager via secrets.ts
  */
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import {
   signAdminToken,
@@ -10,14 +13,14 @@ import {
   sanitizeText,
   securityHeaders,
 } from '../../../lib/security';
-
-const ADMIN_USERNAME     = process.env.ADMIN_USERNAME ?? 'admin';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ?? '$2a$12$uXNA89Vt1VgkBRs1VDFKQOOpz8eTHW3OppArYPPSeGFeuOiV8LeRK';
+import { getSecrets } from '../../../lib/secrets';
 
 async function verifyPassword(plain: string, hash: string): Promise<boolean> {
-  if (!hash || hash.startsWith('REPLACE')) return false;
+  if (!hash) return false;
   const bcrypt = await import('bcryptjs');
-  const lib = (bcrypt.default ?? bcrypt) as { compare: (a: string, b: string) => Promise<boolean> };
+  const lib = (bcrypt.default ?? bcrypt) as {
+    compare: (a: string, b: string) => Promise<boolean>;
+  };
   return lib.compare(plain, hash);
 }
 
@@ -26,13 +29,13 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 
   // Rate limit: 5 attempts per IP per 15 minutes
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const rl = checkRateLimit(`login:${ip}`, 5, 15 * 60_000);
+  const rl = await checkRateLimit(`login:${ip}`, 5, 15 * 60_000);
   if (!rl.allowed) {
     headers.set('Retry-After', String(Math.ceil((rl.resetAt - Date.now()) / 1000)));
     return redirect('/admin?error=ratelimit', 303);
   }
 
-  // Parse body (supports both form POST and JSON)
+  // Parse body
   let username = '';
   let password = '';
   const ct = request.headers.get('content-type') ?? '';
@@ -46,23 +49,25 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     password = String(form.get('password') ?? '').slice(0, 128);
   }
 
-  const usernameOk = username === ADMIN_USERNAME;
-  const passwordOk = await verifyPassword(password, ADMIN_PASSWORD_HASH);
+  // Load credentials from Secrets Manager (cached after first call)
+  const secrets = await getSecrets();
+
+  const usernameOk = username === secrets.adminUsername;
+  const passwordOk = await verifyPassword(password, secrets.adminPasswordHash);
 
   if (!usernameOk || !passwordOk) {
     return redirect('/admin?error=invalid', 303);
   }
 
-  // Issue JWT cookie
   const jwt       = await signAdminToken(username);
   const csrfToken = generateCsrfToken();
-  // Note: No Secure flag — CloudFront terminates SSL, EC2 sees HTTP internally
-  // SameSite=Lax instead of Strict so cookie survives CloudFront redirects
-  const cookieBase = 'Path=/; SameSite=Lax; Max-Age=28800';
+  // Secure now safe to set on both cookies — Lambda Function URL + CloudFront
+  // means the client-facing connection is always HTTPS (unlike the old EC2
+  // setup where CloudFront terminated TLS and forwarded plain HTTP to EC2).
+  const cookieBase = 'Path=/; SameSite=Lax; Max-Age=28800; Secure';
 
   headers.append('Set-Cookie', `admin_token=${jwt}; ${cookieBase}; HttpOnly`);
-  // CSRF must NOT be HttpOnly — JS reads it for X-CSRF-Token header
-  headers.append('Set-Cookie', `csrf_token=${csrfToken}; ${cookieBase}`);
+  headers.append('Set-Cookie', `admin_csrf_token=${csrfToken}; ${cookieBase}`);
   headers.set('Location', '/admin/dashboard');
 
   return new Response(null, { status: 303, headers });

@@ -1,9 +1,13 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { getReviews, createReview } from '../../../lib/db';
-import { sanitizeText, isValidEmail, sanitizeRating, verifyCsrfToken, checkRateLimit, securityHeaders } from '../../../lib/security';
+import { sanitizeText, isValidEmail, sanitizeRating, verifyCsrfToken, checkRateLimit, securityHeaders, corsHeaders } from '../../../lib/security';
 
-const H = () => new Headers({ 'Content-Type': 'application/json', ...securityHeaders() });
+// Both routes get CORS headers — this is called cross-origin from the
+// DreamHost-hosted product pages (a different origin from this Lambda).
+const H = () => new Headers({ 'Content-Type': 'application/json', ...securityHeaders(), ...corsHeaders() });
 
 const ReviewSchema = z.object({
   product: z.enum(['kombucha', 'sobolo', 'salve']),
@@ -32,12 +36,22 @@ export const POST: APIRoute = async ({ request }) => {
   const headers = H();
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const rl = checkRateLimit(`review:${ip}`, 10, 3600_000);
+  // checkRateLimit is now async — it round-trips to DynamoDB instead of an
+  // in-memory Map, since Lambda has no single shared process to hold state in.
+  const rl = await checkRateLimit(`review:${ip}`, 10, 3600_000);
   if (!rl.allowed) return new Response(JSON.stringify({ message: 'Too many requests.' }), { status: 429, headers });
 
-  const cookieCsrf = request.headers.get('cookie')?.match(/csrf_token=([^;]+)/)?.[1] ?? null;
+  // A browser can send MORE THAN ONE csrf_token cookie at once — e.g. a stale
+  // host-only cookie (api.solarblessings.com) left over from a previous deploy
+  // PLUS the current domain-scoped one (.solarblessings.com). A single-match
+  // regex grabs whichever comes first and can pick the wrong (stale) one,
+  // causing a spurious 403. So collect ALL csrf_token values and accept the
+  // request if ANY of them matches the header token.
   const headerCsrf = request.headers.get('x-csrf-token');
-  if (!verifyCsrfToken(cookieCsrf, headerCsrf))
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const cookieTokens = [...cookieHeader.matchAll(/csrf_token=([^;]+)/g)].map(m => m[1]);
+  const csrfOk = !!headerCsrf && cookieTokens.some(t => verifyCsrfToken(t, headerCsrf));
+  if (!csrfOk)
     return new Response(JSON.stringify({ message: 'Invalid request token.' }), { status: 403, headers });
 
   let body: unknown;
@@ -65,4 +79,11 @@ export const POST: APIRoute = async ({ request }) => {
     console.error(err);
     return new Response(JSON.stringify({ message: 'Could not save review.' }), { status: 500, headers });
   }
+};
+
+// CORS preflight — required because POST requests here carry a custom
+// X-CSRF-Token header, which forces the browser to preflight even though
+// the method itself (POST) wouldn't otherwise require one.
+export const OPTIONS: APIRoute = async () => {
+  return new Response(null, { status: 204, headers: corsHeaders() });
 };

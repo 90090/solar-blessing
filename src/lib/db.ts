@@ -16,14 +16,13 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
-  GetCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type Product  = 'kombucha' | 'sobolo' | 'salve';
-export type Status   = 'pending' | 'approved' | 'rejected';
+export type Product    = 'kombucha' | 'sobolo' | 'salve';
+export type Status     = 'pending' | 'approved' | 'rejected';
 export type EntityType = 'REVIEW' | 'POST' | 'EVENT';
 
 export interface Review {
@@ -50,7 +49,7 @@ export type ContentItem = Review | Post | Event;
 
 // ── DynamoDB client (lazy — only created when TABLE env var is present) ────────
 
-const TABLE = process.env.DYNAMODB_TABLE ?? '';
+const TABLE  = process.env.DYNAMODB_TABLE ?? '';
 const REGION = process.env.AWS_REGION ?? 'us-east-1';
 
 let _ddb: DynamoDBDocumentClient | null = null;
@@ -113,20 +112,20 @@ const devStore: ContentItem[] = [
   },
 ];
 
-// ── Core helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const isLive = () => Boolean(TABLE);
 
 function devQuery(entityType: EntityType, status?: string): ContentItem[] {
-  return devStore.filter(i =>
-    i.entityType === entityType && (!status || i.status === status)
-  ).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return devStore
+    .filter(i => i.entityType === entityType && (!status || i.status === status))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 // ── DynamoDB helpers ──────────────────────────────────────────────────────────
 
 async function dbQuery(entityType: EntityType, status?: string): Promise<ContentItem[]> {
-  const params: any = {
+  const result = await ddb().send(new QueryCommand({
     TableName:              TABLE,
     IndexName:              'EntityStatus-CreatedAt-Index',
     KeyConditionExpression: status
@@ -135,9 +134,8 @@ async function dbQuery(entityType: EntityType, status?: string): Promise<Content
     ExpressionAttributeValues: status
       ? { ':et': entityType, ':sc': `${status}#` }
       : { ':et': entityType },
-    ScanIndexForward: false,
-  };
-  const result = await ddb().send(new QueryCommand(params));
+    ScanIndexForward: false, // newest first
+  }));
   return (result.Items ?? []) as ContentItem[];
 }
 
@@ -329,9 +327,8 @@ export async function getStats() {
     approvedPosts:   ap.length,
     approvedEvents:  ae.length,
     rejectedReviews: rr.length,
-    // Totals for convenience
-    totalReviews: pr.length + ar.length + rr.length,
-    totalPosts:   pp.length + ap.length,
-    totalEvents:  pe.length + ae.length,
+    totalReviews:    pr.length + ar.length + rr.length,
+    totalPosts:      pp.length + ap.length,
+    totalEvents:     pe.length + ae.length,
   };
 }

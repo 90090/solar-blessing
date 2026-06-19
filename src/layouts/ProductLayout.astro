@@ -1,10 +1,17 @@
 ---
+// No prerender export needed — this page is meant to be static (the
+// default), unlike admin pages and API routes which opt OUT with
+// prerender = false. This file used to read Astro.cookies and run an SSR
+// fetch() here; both are gone now. Static pages on DreamHost have no
+// request-time server to run that logic in, so it moved into
+// ReviewList.tsx and ReviewForm.tsx, which fetch from the Lambda API
+// (api.yourdomain.com) client-side after the page loads in the browser.
+
 import BaseLayout from './BaseLayout.astro';
 import ReviewForm from '../components/ReviewForm';
-import StarRating from '../components/StarRating';
+import ReviewList from '../components/ReviewList';
 
 interface Step { number: string; title: string; body: string; }
-interface Review { id: string; name: string; rating: number; body: string; createdAt: string; }
 
 interface Props {
   product:    'kombucha' | 'sobolo' | 'salve';
@@ -23,21 +30,6 @@ const {
   product, title, tagline, intro, whatIsIt, benefits,
   steps, accentClass, heroImage, image,
 } = Astro.props;
-
-// ── Read CSRF token set by middleware (never set cookies here) ────────────────
-// Middleware already called context.cookies.set() before headers were flushed.
-// We just read it back to pass into the React form as a prop.
-const csrfToken = Astro.cookies.get('csrf_token')?.value ?? '';
-
-// ── Fetch approved reviews at SSR time ────────────────────────────────────────
-let reviews: Review[] = [];
-try {
-  const origin = Astro.url.origin;
-  const res = await fetch(`${origin}/api/reviews?product=${product}`);
-  if (res.ok) reviews = await res.json() as Review[];
-} catch (err) {
-  console.error('Could not pre-load reviews:', err);
-}
 ---
 
 <BaseLayout title={`${title} — Solar Blessing`}>
@@ -103,7 +95,7 @@ try {
       </div>
 
       <!-- image box -->
-      <div class="h-65 rounded-2xl bg-cream overflow-hidden shadow-lg">
+      <div class="h-180 rounded-2xl bg-cream overflow-hidden shadow-lg">
         <img
           src={image}
           alt={title}
@@ -135,32 +127,17 @@ try {
       <h2 class="font-display text-4xl text-forest mb-2">What People Are Saying</h2>
       <p class="text-bark/50 mb-10">Reviews are moderated before publishing.</p>
 
-      <!-- Approved reviews (SSR-fetched) -->
-      {reviews.length > 0 ? (
-        <div class="space-y-5 mb-14">
-          {reviews.map(r => (
-            <div class="bg-cream rounded-2xl p-6 space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <span class="font-semibold text-forest">{r.name}</span>
-                <StarRating client:load value={r.rating} readonly size="sm" />
-              </div>
-              <p class="text-bark/70 font-body text-sm leading-relaxed">{r.body}</p>
-              <p class="text-bark/30 text-xs">
-                {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div class="bg-cream rounded-2xl p-8 text-center text-bark/40 mb-14 italic">
-          No reviews yet — be the first!
-        </div>
-      )}
+      <!-- Approved reviews — fetched client-side from the Lambda API,
+           since this page is now static and has no request-time server
+           to do that fetch in. See ReviewList.tsx. -->
+      <ReviewList client:load product={product} />
 
-      <!-- Submit form -->
+      <!-- Submit form — fetches its own CSRF token client-side now too,
+           since there's no middleware running on this static page to set
+           the cookie server-side. See ReviewForm.tsx. -->
       <div class="bg-cream rounded-3xl p-8 md:p-10">
         <h3 class="font-display text-2xl text-forest mb-6">Leave a Review</h3>
-        <ReviewForm client:load product={product} csrfToken={csrfToken} />
+        <ReviewForm client:load product={product} />
       </div>
     </div>
   </section>

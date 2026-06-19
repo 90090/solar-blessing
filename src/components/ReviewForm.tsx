@@ -1,12 +1,20 @@
-'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import StarRating from './StarRating';
-import { sanitizeText, isValidEmail, sanitizeRating } from '../lib/security';
-import type { Review } from '../lib/api';
+// Pulled from the client-safe sanitize.ts, NOT security.ts — security.ts now
+// imports the AWS SDK (DynamoDB) and `jose` (JWT) for server-only logic, and
+// none of that should ever end up in a browser bundle.
+import { sanitizeText, isValidEmail, sanitizeRating } from '../lib/sanitize';
+import { API_BASE_URL } from '../lib/apiConfig';
+
+// Note: '../lib/api' (the original import source for this type) doesn't
+// exist anywhere in the project as uploaded — defined locally instead.
+// db.ts has the authoritative Product type, but db.ts is server-only (pulls
+// in the AWS SDK), so importing from it here would have the same
+// client-bundle problem already fixed for security.ts/sanitize.ts.
+type Product = 'kombucha' | 'sobolo' | 'salve';
 
 interface ReviewFormProps {
-  product: Review['product'];
-  csrfToken: string;
+  product: Product;
 }
 
 interface FormState {
@@ -20,11 +28,27 @@ type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 const MAX_BODY = 1000;
 
-export default function ReviewForm({ product, csrfToken }: ReviewFormProps) {
+export default function ReviewForm({ product }: ReviewFormProps) {
   const [form, setForm] = useState<FormState>({ name: '', email: '', body: '', rating: 0 });
   const [errors, setErrors] = useState<Partial<FormState & { rating: string }>>({});
   const [status, setStatus] = useState<Status>('idle');
+  const [csrfToken, setCsrfToken] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
+
+  // ── Fetch CSRF token on mount ──────────────────────────────────────────────
+  // This page is now static HTML served from DreamHost — there's no Astro
+  // middleware running at request time to set this cookie server-side
+  // anymore (that only happens for pages rendered by the Lambda, like
+  // /admin). Instead we hit a dedicated endpoint that issues the token and
+  // sets it via Set-Cookie cross-origin (SameSite=None; Secure — see
+  // src/pages/api/csrf.ts for why). credentials:'include' is required on
+  // every fetch here for the cookie to actually be stored/sent.
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/csrf`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setCsrfToken(data.csrfToken ?? ''))
+      .catch(err => console.error('Could not fetch CSRF token:', err));
+  }, []);
 
   // ── Validation ──────────────────────────────────────────────────────────────
   function validate(): boolean {
@@ -45,7 +69,9 @@ export default function ReviewForm({ product, csrfToken }: ReviewFormProps) {
     setStatus('submitting');
 
     try {
-      // Client-side sanitization (server must also sanitize)
+      // Client-side sanitization is a UX nicety only — the server runs the
+      // same checks again (and is the only copy that actually matters for
+      // security) in src/pages/api/reviews/index.ts.
       const payload = {
         product,
         name:   sanitizeText(form.name),
@@ -54,7 +80,7 @@ export default function ReviewForm({ product, csrfToken }: ReviewFormProps) {
         rating: sanitizeRating(form.rating) as 1|2|3|4|5,
       };
 
-      const res = await fetch('/api/reviews', {
+      const res = await fetch(`${API_BASE_URL}/api/reviews`, {
         method:  'POST',
         headers: {
           'Content-Type':  'application/json',
@@ -169,7 +195,7 @@ export default function ReviewForm({ product, csrfToken }: ReviewFormProps) {
 
       <button
         type="submit"
-        disabled={status === 'submitting'}
+        disabled={status === 'submitting' || !csrfToken}
         className="btn-primary w-full justify-center disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {status === 'submitting' ? (
@@ -180,7 +206,7 @@ export default function ReviewForm({ product, csrfToken }: ReviewFormProps) {
             </svg>
             Submitting…
           </>
-        ) : 'Submit Review'}
+        ) : !csrfToken ? 'Loading…' : 'Submit Review'}
       </button>
     </form>
   );

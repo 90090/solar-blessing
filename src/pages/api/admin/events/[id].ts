@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { requireAdmin, JSON_HEADERS } from '../../../../lib/adminAuth';
 import { moderateEvent, deleteEvent } from '../../../../lib/db';

@@ -1,4 +1,7 @@
 ---
+export const prerender = false; // reads cookies + verifies JWT at request time — must run on the Lambda, not be baked into a static HTML file
+
+import '../../styles/global.css';
 import { verifyAdminToken, getTokenFromCookies, securityHeaders } from '../../lib/security';
 
 // If already logged in, redirect to dashboard
@@ -23,7 +26,6 @@ const loginError = Astro.url.searchParams.get('error');
   <title>Admin — Solar Blessing</title>
   <!-- Prevent indexing of admin page -->
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="stylesheet" href="/src/styles/global.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" />
   <style>

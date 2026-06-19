@@ -21,12 +21,26 @@ const {
   <title>{title}</title>
 
   <!-- Security meta tags -->
+  <!-- DreamHost serves plain static files — there's no server-side request
+       handler here to inject response headers the way securityHeaders() does
+       on the Lambda side, so CSP has to be set via meta tag instead.
+       connect-src includes the API origin since pages now fetch cross-origin
+       to api.yourdomain.com for reviews/posts/events/csrf — replace with
+       your actual API subdomain before deploying. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.solarblessings.com; img-src 'self' data:; frame-ancestors 'none';" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="X-Frame-Options" content="DENY" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-  <!-- Favicon placeholder -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/IMG_2213.PNG" />
+  <!-- Google Fonts loaded via link (not CSS @import — avoids postcss-import conflict) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+  />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
 <body class="min-h-screen flex flex-col">
   <Nav />

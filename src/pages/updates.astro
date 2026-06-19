@@ -1,42 +1,13 @@
 ---
+// No prerender export — this page is static (the default) now. The old
+// frontmatter ran Astro.url.origin + a Promise.all of fetch() calls at SSR
+// time, which only worked because the page was server-rendered on every
+// visit. That's gone — DreamHost can't run that logic at request time, so
+// it moved into UpdatesContent.tsx, which fetches from the Lambda API
+// (api.yourdomain.com) client-side after the page loads.
+
 import BaseLayout from '../layouts/BaseLayout.astro';
-import StarRating from '../components/StarRating';
-
-const origin = Astro.url.origin;
-
-async function safeFetch<T>(url: string, fallback: T): Promise<T> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return fallback;
-    return res.json() as Promise<T>;
-  } catch {
-    return fallback;
-  }
-}
-
-interface Post  { id: string; title: string; excerpt: string; body: string; createdAt: string; }
-interface Event { id: string; title: string; date: string; time: string; location: string; description: string; }
-interface Review { id: string; name: string; rating: number; body: string; product: string; createdAt: string; }
-
-const [posts, events, kombucha, sobolo, salve] = await Promise.all([
-  safeFetch<Post[]>(`${origin}/api/updates/posts`, []),
-  safeFetch<Event[]>(`${origin}/api/updates/events`, []),
-  safeFetch<Review[]>(`${origin}/api/reviews?product=kombucha`, []),
-  safeFetch<Review[]>(`${origin}/api/reviews?product=sobolo`, []),
-  safeFetch<Review[]>(`${origin}/api/reviews?product=salve`, []),
-]);
-
-const allReviews = [...kombucha, ...sobolo, ...salve]
-  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  .slice(0, 6);
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function productLabel(p: string) {
-  return { kombucha: '🍵 Kombucha', sobolo: '🌺 Sobolo', salve: '✋ Hand Salve' }[p] ?? p;
-}
+import UpdatesContent from '../components/UpdatesContent';
 ---
 
 <BaseLayout title="Updates & News — Solar Blessing">
@@ -51,129 +22,6 @@ function productLabel(p: string) {
     </div>
   </section>
 
-  <!-- ── Events / Where to Find Us ── -->
-  <section class="section-pad bg-white">
-    <div class="container-xl">
-      <h2 class="font-display text-4xl text-forest mb-3">Where to Find Us</h2>
-      <p class="text-bark/50 font-body mb-10">Come say hi at one of our upcoming events.</p>
-
-      {events.length > 0 ? (
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map(ev => (
-            <div class="card overflow-hidden">
-              <!-- Coloured date header -->
-              <div class="bg-forest px-6 py-4">
-                <p class="text-sun font-semibold text-sm font-body">{ev.date}</p>
-                <h3 class="font-display text-xl text-white mt-1">{ev.title}</h3>
-              </div>
-              <div class="p-6 space-y-3">
-                {ev.time && (
-                  <div class="flex items-center gap-2 text-sm text-bark/60 font-body">
-                    <span>🕐</span><span>{ev.time}</span>
-                  </div>
-                )}
-                {ev.location && (
-                  <div class="flex items-center gap-2 text-sm text-bark/60 font-body">
-                    <span>📍</span><span>{ev.location}</span>
-                  </div>
-                )}
-                {ev.description && (
-                  <p class="text-bark/50 text-sm font-body leading-relaxed pt-1 border-t border-forest/08">
-                    {ev.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-          <!-- Placeholder for future events -->
-          <div class="rounded-2xl border-2 border-dashed border-forest/15 flex flex-col items-center justify-center p-8 text-center gap-3">
-            <span class="text-3xl">📅</span>
-            <p class="text-bark/30 italic text-sm font-body">More events coming soon…</p>
-          </div>
-        </div>
-      ) : (
-        <div class="rounded-2xl border-2 border-dashed border-forest/15 p-14 text-center space-y-3">
-          <span class="text-4xl block">📅</span>
-          <p class="text-bark/30 italic font-body">No upcoming events right now — check back soon!</p>
-        </div>
-      )}
-    </div>
-  </section>
-
-  <!-- ── Blog Posts ── -->
-  <section class="section-pad bg-cream">
-    <div class="container-xl">
-      <h2 class="font-display text-4xl text-forest mb-3">Recent Updates</h2>
-      <p class="text-bark/50 font-body mb-10">News and announcements from Solar Blessing.</p>
-
-      {posts.length > 0 ? (
-        <div class="space-y-6">
-          {posts.map((post, i) => (
-            <div class:list={['card overflow-hidden grid', i % 2 === 0 ? 'md:grid-cols-[220px_1fr]' : 'md:grid-cols-[1fr_220px]']}>
-              <div class:list={[
-                'h-44 md:h-auto flex items-center justify-center text-5xl bg-sun/15',
-                i % 2 !== 0 && 'md:order-last'
-              ]}>
-                📰
-              </div>
-              <div class="p-8 space-y-3">
-                <p class="text-sun font-semibold text-xs font-body tracking-wide uppercase">{fmtDate(post.createdAt)}</p>
-                <h3 class="font-display text-2xl text-forest">{post.title}</h3>
-                {post.excerpt && (
-                  <p class="text-bark/60 leading-relaxed text-sm font-body">{post.excerpt}</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div class="rounded-2xl border-2 border-dashed border-forest/15 p-14 text-center space-y-3">
-          <span class="text-4xl block">📰</span>
-          <p class="text-bark/30 italic font-body">No posts yet — check back soon!</p>
-        </div>
-      )}
-    </div>
-  </section>
-
-  <!-- ── Reviews ── -->
-  <section class="section-pad bg-white">
-    <div class="container-xl">
-      <h2 class="font-display text-4xl text-forest mb-3">What People Are Saying</h2>
-      <p class="text-bark/50 font-body mb-10">Real reviews from our customers.</p>
-
-      {allReviews.length > 0 ? (
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allReviews.map(r => (
-            <div class="bg-sun/10 rounded-2xl p-7 space-y-4 flex flex-col">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <StarRating client:load value={r.rating} readonly size="sm" />
-                <span class="text-xs text-bark/40 font-body bg-white px-2 py-0.5 rounded-full">
-                  {productLabel(r.product)}
-                </span>
-              </div>
-              <p class="font-body italic text-bark/75 leading-relaxed text-sm flex-1">"{r.body}"</p>
-              <div class="flex items-center justify-between pt-2 border-t border-sun/20">
-                <p class="font-semibold text-forest text-sm">— {r.name}</p>
-                <p class="text-xs text-bark/30 font-body">{fmtDate(r.createdAt)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div class="rounded-2xl border-2 border-dashed border-earth/20 p-14 text-center space-y-3">
-          <span class="text-4xl block">⭐</span>
-          <p class="text-bark/30 italic font-body">No reviews yet — leave one on a product page!</p>
-        </div>
-      )}
-
-      <!-- Links to product pages -->
-      <div class="flex flex-wrap gap-4 mt-10 pt-8 border-t border-forest/08">
-        <p class="text-bark/50 text-sm font-body self-center">Leave a review:</p>
-        <a href="/kombucha#reviews" class="btn-outline text-sm py-2 px-5">Kombucha</a>
-        <a href="/sobolo#reviews"   class="btn-outline text-sm py-2 px-5">Sobolo</a>
-        <a href="/salve#reviews"    class="btn-outline text-sm py-2 px-5">Hand Salve</a>
-      </div>
-    </div>
-  </section>
+  <UpdatesContent client:load />
 
 </BaseLayout>
